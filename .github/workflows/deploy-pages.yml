@@ -18,12 +18,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Publish standalone web app
+  build:
+    name: Prepare static RV CONTROL site
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out RV CONTROL
         uses: actions/checkout@v4
@@ -34,10 +31,19 @@ jobs:
           mkdir -p dist
           cp index.html dist/index.html
           touch dist/.nojekyll
-      - name: Upload static site
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
-      - name: Deploy to Pages
+
+  deploy:
+    name: Deploy RV CONTROL to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
