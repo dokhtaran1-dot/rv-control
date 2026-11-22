@@ -14,7 +14,7 @@ Independent restaurant operations app under Sahand Consortium / Royal Mall.
 
 ## Publish the public frontend (data stays private)
 
-GitHub → repo **Settings** → **Pages** → `Deploy from a branch` → `main` → `/(root)` → Save.
+GitHub → repo **Settings** → **Pages** → **Build and deployment** → set **Source** to `GitHub Actions` → Save.\n\nThe repository already contains `.github/workflows/deploy-pages.yml` and will publish on the next `main` push. The first attempt to auto-enable Pages failed with GitHub's `Resource not accessible by integration` (Pages site creation denied to the workflow token). A repository administrator must enable Pages once in Settings; after that we can rerun or retrigger the deployment.
 Then check `https://dokhtaran1-dot.github.io/rv-control/`.
 The repository is public, so **never commit passwords, private salary lists, employee IDs, secret keys, or service-role keys**. A Supabase **publishable key** is safe in a browser but access control depends on Auth and RLS.
 
