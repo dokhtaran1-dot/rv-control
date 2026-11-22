@@ -27,10 +27,8 @@ jobs:
     steps:
       - name: Check out RV CONTROL
         uses: actions/checkout@v4
-      - name: Configure GitHub Pages (enable if needed)
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - name: Prepare public assets
         run: |
           mkdir -p dist
