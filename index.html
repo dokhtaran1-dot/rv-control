@@ -91,7 +91,7 @@ window.supabase={createClient:(base,key)=>{
 <header class="head"><div class="brand"><div class="mark">RV</div><div><div class="eng">RV CONTROL</div><div class="tiny">LE ROYAL VILLAGE CAFÉ · STAFF MANAGEMENT</div></div></div><div class="subtitle">سامانه خصوصی مدیریت و نظارت رویال ویلیج کافه</div></header>
 <main class="wrap">
 <div id="loading" class="card muted">در حال اتصال امن به سامانه…</div>
-<section id="auth" class="hide"><div class="card" style="max-width:450px;margin:25px auto"><h2>ورود اختصاصی کارکنان RV</h2><p class="muted">ورود فقط برای حساب‌های مجاز رستوران فعال است.</p><div class="input-row" style="margin-top:12px"><button id="phoneMode" class="block">موبایل و رمز</button><button id="emailMode" class="outline block">ایمیل قبلی</button></div><div id="phoneField" class="field"><label for="phone">شماره موبایل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="09123456789 یا +994..." dir="ltr"></div><div id="emailField" class="field hide"><label for="email">ایمیل</label><input id="email" type="email" placeholder="name@example.com" autocomplete="email" dir="ltr"></div><div class="field"><label for="pass">رمز عبور</label><input id="pass" type="password" autocomplete="current-password" placeholder="حداقل ۸ کاراکتر" dir="ltr"></div><button id="loginBtn" class="block">ورود</button><button id="signupBtn" class="outline block hide">ثبت‌نام اولیه با ایمیل</button><div id="authMsg" class="info hide"></div><p class="muted mini" id="authHelp">برای ورود موبایلی بدون پیامک، حساب موبایل و رمز باید قبلاً توسط مدیر سامانه ایجاد شده باشد. ثبت‌نام به‌تنهایی دسترسی نمی‌دهد.</p></div></section>
+<section id="auth" class="hide"><div class="card" style="max-width:450px;margin:25px auto"><h2>ورود اختصاصی کارکنان RV</h2><p class="muted">ورود فقط برای حساب‌های مجاز رستوران فعال است.</p><div class="input-row" style="margin-top:12px"><button id="phoneMode" class="block">موبایل و رمز</button><button id="emailMode" class="outline block">ایمیل قبلی</button></div><div id="phoneField" class="field"><label for="phone">شماره موبایل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="09123456789 یا +994..." dir="ltr"></div><div id="emailField" class="field hide"><label for="email">ایمیل</label><input id="email" type="email" placeholder="name@example.com" autocomplete="email" dir="ltr"></div><div class="field"><label for="pass">رمز عبور</label><input id="pass" type="password" autocomplete="current-password" placeholder="حداقل ۸ کاراکتر" dir="ltr"></div><button id="loginBtn" class="block">ورود</button><button id="signupBtn" class="outline block hide">ثبت‌نام اولیه با ایمیل</button><div id="authMsg" class="info hide"></div><p class="muted mini" id="authHelp">ورود با شماره به‌عنوان شناسه و رمز عبور است؛ پیامک و تأیید مالکیت شماره ندارد. حساب باید قبلاً توسط مدیر ساخته شده باشد؛ ثبت‌نام به‌تنهایی دسترسی نمی‌دهد.</p></div></section>
 <section id="pending" class="hide"><div class="card"><h2>حساب شما هنوز مجوز ندارد</h2><p>ورود موفق بود؛ اما این حساب هنوز به فهرست مجاز RV CONTROL متصل نشده است.</p><div class="info">برای فعال شدن پنل مالک یا حساب کارکنان، مدیر سامانه باید نقش را در پایگاه داده تأیید کند.</div><button id="pendingLogout" class="outline block">خروج</button></div></section>
 <section id="app" class="hide">
 <div class="card" style="padding:12px 16px"><div class="row"><div><b id="userName">کاربر</b><div id="roleText" class="muted"></div></div><button class="outline action" id="logout">خروج</button></div></div>
@@ -169,7 +169,7 @@ function setLoginMode(mode){
  el("phoneMode").classList.toggle("outline",mode!=="phone");
  el("emailMode").classList.toggle("outline",mode!=="email");
  el("authHelp").textContent=mode==="phone"?
-  "ورود با شماره بدون ارسال پیامک، فقط برای حساب‌های موبایلی از پیش فعال‌شده توسط مدیر.":"برای حفظ ورود حساب قبلی، ایمیل موقتاً فعال است.";
+  "ورود رایگان با شماره به‌عنوان شناسه و رمز عبور انجام می‌شود؛ شماره با پیامک تأیید نمی‌شود. مدیر باید ابتدا حساب را در RV CONTROL بسازد.":"برای حفظ ورود حساب قبلی، ایمیل موقتاً فعال است.";
  el("authMsg").classList.add("hide");
 }
 function normalizePhone(raw){
@@ -179,6 +179,11 @@ function normalizePhone(raw){
  if(/^0098\d{10}$/.test(value))return "+"+value.slice(2);
  if(/^\+\d{8,15}$/.test(value))return value;
  return null;
+}
+function phoneLoginAlias(phone){
+ // Staff numbers are login identifiers, not verified phone ownership.
+ // Example.com is reserved; no actual staff email address is needed.
+ return "rv-"+phone.replace(/\D/g,"")+"@example.com";
 }
 async function auth(signup){
  const password=el("pass").value;
@@ -190,11 +195,11 @@ async function auth(signup){
  if(loginMode==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){authMessage("ایمیل معتبر وارد کن.",true);return;}
  el("loginBtn").disabled=true;el("signupBtn").disabled=true;
  try{
-  const r=signup?await db.auth.signUp({email,password}):await db.auth.signInWithPassword(loginMode==="phone"?{phone,password}:{email,password});
+  const r=signup?await db.auth.signUp({email,password}):await db.auth.signInWithPassword(loginMode==="phone"?{email:phoneLoginAlias(phone),password}:{email,password});
   if(r.error)throw r.error;
   if(signup&&!r.data.session){authMessage("ثبت اولیه انجام شد. لینک تأیید ایمیل را باز کن؛ سپس وارد شو.");return;}
   session=r.data.session;await prepare();
- }catch(e){authMessage("ورود ناموفق: "+e.message+(loginMode==="phone"?" برای ورود با شماره، حساب موبایلی باید قبلاً فعال شده باشد.":"") ,true);}
+ }catch(e){authMessage("ورود ناموفق: "+e.message+(loginMode==="phone"?" حساب باید قبلاً در RV CONTROL با شناسه داخلی آن شماره ساخته شده باشد.":"") ,true);}
  finally{el("loginBtn").disabled=false;el("signupBtn").disabled=false;}
 }
 async function prepare(){
