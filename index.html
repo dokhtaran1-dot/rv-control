@@ -329,7 +329,7 @@ function renderRequests(){
 }
 async function loadStaff(){
  try{const r=await db.from("rvctl_staff").select("full_name,department,job_title,active").order("department");
- if(r.error)throw r.error;staff=r.data||[];renderStaff();
+ if(r.error)throw r.error;staff=(r.data||[]).filter(x=>x.department!=="رویال مال");renderStaff();
  }catch(e){el("staffList").textContent="خطا در دریافت فهرست: "+e.message;}
 }
 function renderStaff(){
