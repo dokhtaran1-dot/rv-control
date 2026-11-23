@@ -59,8 +59,9 @@ window.supabase={createClient:(base,key)=>{
   return {
     auth:{
       async getSession(){await valid();return {data:{session:sess},error:null};},
-      async signInWithPassword({email,password}){
-        const r=await call(AUTH+"/token?grant_type=password",{method:"POST",body:JSON.stringify({email,password})},false);
+      async signInWithPassword({email,phone,password}){
+        const credentials=phone?{phone,password}:{email,password};
+        const r=await call(AUTH+"/token?grant_type=password",{method:"POST",body:JSON.stringify(credentials)},false);
         if(!r.error&&r.data?.access_token)save({...r.data,expires_at:Math.floor(Date.now()/1000)+(r.data.expires_in||3600)});
         return {data:{session:sess},error:r.error};
       },
@@ -87,11 +88,11 @@ window.supabase={createClient:(base,key)=>{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" async></script>
 </head>
 <body>
-<header class="head"><div class="brand"><div class="mark">RV</div><div><div class="eng">RV CONTROL</div><div class="tiny">ROYAL MALL · SAHAND CONSORTIUM</div></div></div><div class="subtitle">سامانه خصوصی مدیریت و نظارت رویال ویلیج کافه</div></header>
+<header class="head"><div class="brand"><div class="mark">RV</div><div><div class="eng">RV CONTROL</div><div class="tiny">LE ROYAL VILLAGE CAFÉ · STAFF MANAGEMENT</div></div></div><div class="subtitle">سامانه خصوصی مدیریت و نظارت رویال ویلیج کافه</div></header>
 <main class="wrap">
 <div id="loading" class="card muted">در حال اتصال امن به سامانه…</div>
-<section id="auth" class="hide"><div class="card" style="max-width:450px;margin:25px auto"><h2>ورود اختصاصی</h2><p class="muted">برای مشاهده اطلاعات و ثبت حضور، حساب تأییدشده لازم است.</p><div class="field"><label>ایمیل</label><input id="email" type="email" placeholder="name@example.com" autocomplete="email" dir="ltr"></div><div class="field"><label>رمز عبور</label><input id="pass" type="password" autocomplete="current-password" placeholder="حداقل ۸ کاراکتر" dir="ltr"></div><button id="loginBtn" class="block">ورود به حساب</button><button id="signupBtn" class="outline block">ساخت حساب اولیه</button><div id="authMsg" class="info hide"></div><p class="muted mini">ساخت حساب به‌معنی دریافت دسترسی نیست؛ مالک باید نقش هر شخص را تأیید کند. هیچ‌کس بدون مجوز به اطلاعات کارکنان دسترسی ندارد.</p></div></section>
-<section id="pending" class="hide"><div class="card"><h2>حساب شما هنوز مجوز ندارد</h2><p>ورود موفق بود؛ اما این ایمیل هنوز به فهرست مجاز RV CONTROL متصل نشده است.</p><div class="info">برای فعال شدن پنل مالک یا حساب کارکنان، مدیر سامانه باید نقش را در پایگاه داده تأیید کند.</div><button id="pendingLogout" class="outline block">خروج</button></div></section>
+<section id="auth" class="hide"><div class="card" style="max-width:450px;margin:25px auto"><h2>ورود اختصاصی کارکنان RV</h2><p class="muted">ورود فقط برای حساب‌های مجاز رستوران فعال است.</p><div class="input-row" style="margin-top:12px"><button id="phoneMode" class="block">موبایل و رمز</button><button id="emailMode" class="outline block">ایمیل قبلی</button></div><div id="phoneField" class="field"><label for="phone">شماره موبایل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="09123456789 یا +994..." dir="ltr"></div><div id="emailField" class="field hide"><label for="email">ایمیل</label><input id="email" type="email" placeholder="name@example.com" autocomplete="email" dir="ltr"></div><div class="field"><label for="pass">رمز عبور</label><input id="pass" type="password" autocomplete="current-password" placeholder="حداقل ۸ کاراکتر" dir="ltr"></div><button id="loginBtn" class="block">ورود</button><button id="signupBtn" class="outline block hide">ثبت‌نام اولیه با ایمیل</button><div id="authMsg" class="info hide"></div><p class="muted mini" id="authHelp">برای ورود موبایلی بدون پیامک، حساب موبایل و رمز باید قبلاً توسط مدیر سامانه ایجاد شده باشد. ثبت‌نام به‌تنهایی دسترسی نمی‌دهد.</p></div></section>
+<section id="pending" class="hide"><div class="card"><h2>حساب شما هنوز مجوز ندارد</h2><p>ورود موفق بود؛ اما این حساب هنوز به فهرست مجاز RV CONTROL متصل نشده است.</p><div class="info">برای فعال شدن پنل مالک یا حساب کارکنان، مدیر سامانه باید نقش را در پایگاه داده تأیید کند.</div><button id="pendingLogout" class="outline block">خروج</button></div></section>
 <section id="app" class="hide">
 <div class="card" style="padding:12px 16px"><div class="row"><div><b id="userName">کاربر</b><div id="roleText" class="muted"></div></div><button class="outline action" id="logout">خروج</button></div></div>
 <div class="tabs">
@@ -121,14 +122,14 @@ window.supabase={createClient:(base,key)=>{
   <div class="card"><h2>فهرست تفکیکی حقوق</h2><div id="payroll-list"></div></div>
 </section>
 </section>
-</main><footer class="foot">RV CONTROL · PRIVATE MANAGEMENT SYSTEM · SAHAND CONSORTIUM</footer>
+</main><footer class="foot">RV CONTROL · LE ROYAL VILLAGE CAFÉ · STAFF MANAGEMENT</footer>
 <script>
 (function(){
 "use strict";
 const PROJECT="https://wtwbemwyntvocdilaukk.supabase.co";
 const KEY="sb_publishable_7bhOR_5xd4ByIpOWM0jrWg_VMHNVUkH";
 const el=id=>document.getElementById(id);
-let db=null,role=null,tab="dashboard",session=null,qrToken=null,qrTimer=null,requests=[],staff=[];
+let db=null,role=null,tab="dashboard",session=null,qrToken=null,qrTimer=null,requests=[],staff=[],loginMode="phone";
 const roles={owner:"مالک",executive:"مدیر ارشد",manager:"مدیر اجرایی",chef:"سرآشپز",stock:"انبار",procurement:"خرید",cashier:"صندوق",accountant:"حسابدار",auditor:"حسابرس",staff:"کارمند",kiosk:"دستگاه QR"};
 const statLabel={requested:"درخواست",stock_checked:"کنترل انبار",approved:"تأیید خرید",purchased:"خریداری شد",received:"تحویل انبار",accounted:"ثبت مالی",audited:"حسابرسی شد",rejected:"رد شد"};
 const stageNext={requested:"stock_checked",stock_checked:"approved",approved:"purchased",purchased:"received",received:"accounted",accounted:"audited"};
@@ -147,6 +148,7 @@ async function begin(){
  if(!window.supabase){el("loading").textContent="اتصال کتابخانه امنیتی برقرار نشد. اینترنت یا فیلتر CDN را بررسی کنید.";return;}
  db=window.supabase.createClient(PROJECT,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  el("loginBtn").onclick=()=>auth(false);el("signupBtn").onclick=()=>auth(true);
+ el("phoneMode").onclick=()=>setLoginMode("phone");el("emailMode").onclick=()=>setLoginMode("email");
  el("logout").onclick=logout;el("pendingLogout").onclick=logout;
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  el("newQR").onclick=issueQR;el("scanButton").onclick=scanQR;el("makeRequest").onclick=createRequest;
@@ -156,23 +158,47 @@ async function begin(){
  setInterval(async()=>{if(session&&role&&["owner","executive","manager","auditor"].includes(role)&&tab==="dashboard")await loadDashboard(false);},20000);
  setInterval(async()=>{if(session&&role&&tab==="kiosk"&&qrToken)await issueQR();},60000);
 }
+function setLoginMode(mode){
+ loginMode=mode;
+ el("phoneField").classList.toggle("hide",mode!=="phone");
+ el("emailField").classList.toggle("hide",mode!=="email");
+ el("signupBtn").classList.toggle("hide",mode!=="email");
+ el("phoneMode").classList.toggle("outline",mode!=="phone");
+ el("emailMode").classList.toggle("outline",mode!=="email");
+ el("authHelp").textContent=mode==="phone"?
+  "ورود با شماره بدون ارسال پیامک، فقط برای حساب‌های موبایلی از پیش فعال‌شده توسط مدیر.":"برای حفظ ورود حساب قبلی، ایمیل موقتاً فعال است.";
+ el("authMsg").classList.add("hide");
+}
+function normalizePhone(raw){
+ const value=String(raw||"").trim().replace(/[۰-۹]/g,c=>String("۰۱۲۳۴۵۶۷۸۹".indexOf(c))).replace(/[٠-٩]/g,c=>String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[\s()-]/g,"");
+ if(/^09\d{9}$/.test(value))return "+98"+value.slice(1);
+ if(/^9\d{9}$/.test(value))return "+98"+value;
+ if(/^0098\d{10}$/.test(value))return "+"+value.slice(2);
+ if(/^\+\d{8,15}$/.test(value))return value;
+ return null;
+}
 async function auth(signup){
- let email=el("email").value.trim(),password=el("pass").value;
- if(!email.includes("@")||password.length<8){authMessage("ایمیل معتبر و رمز حداقل ۸ حرف لازم است.",true);return;}
+ const password=el("pass").value;
+ const email=el("email").value.trim();
+ const phone=normalizePhone(el("phone").value);
+ if(signup&&loginMode!=="email"){authMessage("حساب موبایلی باید توسط مدیر فعال شود.",true);return;}
+ if(password.length<8){authMessage("رمز باید حداقل ۸ کاراکتر داشته باشد.",true);return;}
+ if(loginMode==="phone"&&!phone){authMessage("شماره معتبر وارد کن؛ مثل 09123456789 یا +994...",true);return;}
+ if(loginMode==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){authMessage("ایمیل معتبر وارد کن.",true);return;}
  el("loginBtn").disabled=true;el("signupBtn").disabled=true;
  try{
-  const r=signup?await db.auth.signUp({email,password}):await db.auth.signInWithPassword({email,password});
+  const r=signup?await db.auth.signUp({email,password}):await db.auth.signInWithPassword(loginMode==="phone"?{phone,password}:{email,password});
   if(r.error)throw r.error;
-  if(signup&&!r.data.session){authMessage("ثبت اولیه انجام شد. ایمیل تأیید را بررسی کنید؛ پس از تأیید حساب وارد شوید.");return;}
+  if(signup&&!r.data.session){authMessage("ثبت اولیه انجام شد. لینک تأیید ایمیل را باز کن؛ سپس وارد شو.");return;}
   session=r.data.session;await prepare();
- }catch(e){authMessage("خطا: "+e.message,true);}
+ }catch(e){authMessage("ورود ناموفق: "+e.message+(loginMode==="phone"?" برای ورود با شماره، حساب موبایلی باید قبلاً فعال شده باشد.":"") ,true);}
  finally{el("loginBtn").disabled=false;el("signupBtn").disabled=false;}
 }
 async function prepare(){
  try{
   role=await rpc("rvctl_current_role");
   if(!role){show("pending");return;}
-  const u=await db.auth.getUser();el("userName").textContent=u.data.user?.email||"کاربر";
+  const u=await db.auth.getUser();el("userName").textContent=u.data.user?.phone||u.data.user?.email||"کاربر";
   el("roleText").textContent="سطح دسترسی: "+(roles[role]||role);
   show("app");
   el("nav-dashboard").classList.toggle("hide",!["owner","executive","manager","auditor"].includes(role));
