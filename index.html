@@ -97,6 +97,7 @@ window.supabase={createClient:(base,key)=>{
 <div class="card" style="padding:12px 16px"><div class="row"><div><b id="userName">کاربر</b><div id="roleText" class="muted"></div></div><button class="outline action" id="logout">خروج</button></div></div>
 <div class="tabs">
 <button data-tab="dashboard" id="nav-dashboard">مالک</button>
+<button data-tab="presence" id="nav-presence">تأیید حضور</button>
 <button data-tab="attendance" id="nav-attendance">حضور</button>
 <button data-tab="kiosk" id="nav-kiosk">QR شیفت</button>
 <button data-tab="requests" id="nav-requests">کالا</button>
@@ -105,6 +106,7 @@ window.supabase={createClient:(base,key)=>{
 </div>
 <div id="flash" class="info hide"></div>
 <section id="view-dashboard" class="hide"><div class="card"><h2>داشبورد نظارت مالک</h2><div class="grid"><div class="stat"><span class="muted">پرسنل فعال</span><b id="c-active">—</b></div><div class="stat"><span class="muted">داخل شیفت</span><b id="c-shift">—</b></div><div class="stat"><span class="muted">درخواست باز</span><b id="c-requests">—</b></div><div class="stat"><span class="muted">حساب فعال‌شده</span><b id="c-accounts">—</b></div></div><p class="muted" style="margin-top:15px">بازخوانی خودکار هر ۲۰ ثانیه؛ ثبت‌ها با ساعت سرور انجام می‌شوند.</p></div><div class="card"><h2>آخرین ورود و خروج‌ها</h2><div id="events" class="muted">هنوز موردی ثبت نشده است.</div></div></section>
+<section id="view-presence" class="hide"><div class="card"><h2>کنترل و تأیید حضور کارکنان</h2><p class="muted">وضعیت کارکنان فقط از QR زمان‌دار همان شیفت و تأیید مدیر مجاز مشخص می‌شود. «ثبت نشده» به معنای غیبت قطعی نیست.</p><div id="presence-day" class="info">شیفت جاری</div><div class="grid"><div class="stat"><span class="muted">ورود ثبت‌شده</span><b id="presence-in">—</b></div><div class="stat"><span class="muted">خروج ثبت‌شده</span><b id="presence-out">—</b></div><div class="stat"><span class="muted">بدون اسکن امروز</span><b id="presence-none">—</b></div><div class="stat"><span class="muted">تأیید مدیریت</span><b id="presence-reviewed">—</b></div></div><button class="outline block" id="refreshPresence">به‌روزرسانی فهرست</button></div><div class="card"><h2>وضعیت نفر به نفر ـ شامل رانر، ویتر و کارکنان</h2><div id="presence-list" class="muted">فهرست در حال بارگذاری است.</div></div></section>
 <section id="view-attendance" class="hide"><div class="card"><h2>حضور و غیاب QR</h2><p class="muted">با دوربین گوشی، QR زمان‌دار نصب‌شده در محل را اسکن کنید. کد فقط ۷۵ ثانیه اعتبار دارد.</p><div id="scanNotice" class="info">ابتدا با گوشی خود وارد حساب شوید و سپس QR دستگاه محل کار را اسکن کنید.</div><button id="scanButton" class="block" disabled>ثبت ورود یا خروج از QR</button><p id="scanResult" class="muted"></p></div></section>
 <section id="view-kiosk" class="hide"><div class="card"><h2>QR زمان‌دار حضور و غیاب</h2><p class="muted">این صفحه باید روی تبلت یا گوشی ثابتِ محل کار باز باشد. کارکنان با گوشی شخصی و حساب اختصاصی، QR را اسکن می‌کنند.</p><button id="newQR" class="block">ساخت کد جدید</button><div id="qrBox" class="qr-holder"><span style="color:#17382b">برای شروع دکمه بالا را بزنید</span></div><div id="qrExpiry" class="info"></div><p class="muted mini">QR ثابت یا عکس قدیمی پذیرفته نمی‌شود. این روش نیاز به ثبت GPS یا تصویر چهره ندارد.</p></div></section>
 <section id="view-requests" class="hide"><div class="card"><h2>درخواست کالا</h2><div class="field"><label>نام کالا</label><input id="item" maxlength="160" placeholder="مثلاً فیله مرغ"></div><div class="input-row"><div class="field"><label>مقدار</label><input id="qty" type="number" step="0.01" min="0.01" placeholder="۱۲"></div><div class="field"><label>واحد</label><select id="unit"><option>کیلوگرم</option><option>عدد</option><option>بسته</option><option>لیتر</option><option>کارتن</option></select></div></div><div class="field"><label>بخش</label><select id="department"><option>آشپزخانه</option><option>بار</option><option>VIP</option><option>سالن</option><option>خدمات</option></select></div><div class="field"><label>توضیحات</label><textarea id="note" rows="2" maxlength="600" placeholder="مشخصات و ضرورت کالا"></textarea></div><button id="makeRequest" class="block">ارسال درخواست</button></div><div class="card"><h2>گردش درخواست‌ها</h2><p class="muted mini">درخواست ← کنترل انبار ← تأیید مدیر ← خرید ← تحویل ← ثبت مالی ← حسابرسی</p><div id="requestList" style="margin-top:12px"></div></div></section>
@@ -153,6 +155,7 @@ async function begin(){
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  el("newQR").onclick=issueQR;el("scanButton").onclick=scanQR;el("makeRequest").onclick=createRequest;
  el("staffSearch").oninput=renderStaff;
+ el("refreshPresence").onclick=loadPresence;
  const r=await db.auth.getSession();session=r.data.session;
  if(session)await prepare();else show("auth");
  setInterval(async()=>{if(session&&role&&["owner","executive","manager","auditor"].includes(role)&&tab==="dashboard")await loadDashboard(false);},20000);
@@ -202,6 +205,7 @@ async function prepare(){
   el("roleText").textContent="سطح دسترسی: "+(roles[role]||role);
   show("app");
   el("nav-dashboard").classList.toggle("hide",!["owner","executive","manager","auditor"].includes(role));
+  el("nav-presence").classList.toggle("hide",!["owner","executive","manager","auditor"].includes(role));
   el("nav-kiosk").classList.toggle("hide",!["owner","executive","manager","kiosk"].includes(role));
   el("nav-people").classList.toggle("hide",role==="kiosk");
   el("nav-requests").classList.toggle("hide",role==="kiosk");
@@ -216,8 +220,9 @@ async function logout(){await db.auth.signOut();session=null;role=null;qrToken=n
 function nav(next){
  tab=next;el("flash").classList.add("hide");
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===next));
- ["dashboard","attendance","kiosk","requests","people","payroll"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
+ ["dashboard","presence","attendance","kiosk","requests","people","payroll"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
  if(next==="dashboard")loadDashboard(true);
+ if(next==="presence")loadPresence();
  if(next==="requests")loadRequests();
  if(next==="people")loadStaff();
  if(next==="payroll")loadPayroll();
@@ -233,6 +238,49 @@ async function loadDashboard(noisy){
  el("events").innerHTML=(d.last_events||[]).map(e=>'<div class="row"><span>'+safe(e.full_name)+'</span><span class="tag">'+(e.event_type==="in"?"ورود":"خروج")+' · '+safe(pretty(e.occurred_at))+'</span></div>').join("")||"هنوز ورود و خروج ثبت نشده است.";
  }catch(e){if(noisy)msg("خطا در دریافت داشبورد: "+e.message,true);}
 }
+let presenceRows=[];
+async function loadPresence(){
+ if(!["owner","executive","manager","auditor"].includes(role))return;
+ el("presence-list").textContent="در حال دریافت اطلاعات حضور...";
+ try{
+  const d=await rpc("rvctl_presence_board");
+  presenceRows=Array.isArray(d.records)?d.records:[];
+  el("presence-day").textContent="روز کاری (ساعت تهران، شروع شیفت محاسباتی ۰۴:۰۰): "+(d.shift_day||"—");
+  el("presence-in").textContent=presenceRows.filter(x=>x.last_event==="in").length.toLocaleString("fa-IR");
+  el("presence-out").textContent=presenceRows.filter(x=>x.last_event==="out").length.toLocaleString("fa-IR");
+  el("presence-none").textContent=presenceRows.filter(x=>!x.last_event).length.toLocaleString("fa-IR");
+  el("presence-reviewed").textContent=presenceRows.filter(x=>["present","left","not_seen"].includes(x.review_verdict)).length.toLocaleString("fa-IR");
+  renderPresence();
+ }catch(e){el("presence-list").textContent="خطا در دریافت حضور: "+e.message;}
+}
+function renderPresence(){
+ const canReview=["owner","executive","manager"].includes(role);
+ const reviewText={present:"حضور تأیید شد",left:"خروج تأیید شد",not_seen:"عدم مشاهده حضور ثبت شد",stale:"نیازمند بازبینی"};
+ const scanText={in:"ورود QR ثبت شده",out:"خروج QR ثبت شده"};
+ el("presence-list").innerHTML=presenceRows.map(x=>{
+  let scan=x.last_event?scanText[x.last_event]:"در این شیفت QR ثبت نشده";
+  let reviewed=reviewText[x.review_verdict]||"تأیید مدیر ثبت نشده";
+  let verdict=x.last_event==="in"?"present":x.last_event==="out"?"left":"not_seen";
+  let btn=canReview?'<button class="action" data-review="'+safe(x.staff_id)+'" data-verdict="'+verdict+'">'+(x.last_event?"ثبت تأیید مدیر":"ثبت بررسی عدم حضور")+'</button>':"";
+  return '<div class="row" style="align-items:flex-start"><div><b>'+safe(x.full_name)+'</b><div class="muted mini">'+safe(x.job_title)+' · '+safe(x.department)+'</div><div class="mini">'+safe(scan)+(x.last_scan_at?" · "+safe(pretty(x.last_scan_at)):"")+'</div><div class="tag" style="display:inline-block;margin-top:5px">'+safe(reviewed)+'</div>'+(x.review_note?'<div class="muted mini">'+safe(x.review_note)+'</div>':"")+'</div><div>'+btn+'</div></div>';
+ }).join("")||'<p class="muted">هیچ نیروی فعالی در این شیفت ثبت نشده است.</p>';
+ document.querySelectorAll("[data-review]").forEach(b=>b.onclick=async()=>{
+   const staff=presenceRows.find(x=>x.staff_id===b.dataset.review);
+   if(!staff)return;
+   const verdict=b.dataset.verdict;
+   const label=verdict==="not_seen"?"دلیل مشاهده‌نشدن حضور این فرد را بنویس؛ این مورد غیبت قطعی خودکار نیست.":"در صورت نیاز توضیح تأیید مدیر را بنویس:";
+   const note=prompt(label);
+   if(note===null)return;
+   if(verdict==="not_seen"&&note.trim().length<8){msg("برای ثبت عدم مشاهده حضور، دلیل روشن حداقل ۸ کاراکتر لازم است.",true);return;}
+   b.disabled=true;
+   try{
+     await rpc("rvctl_review_presence",{p_staff_id:staff.staff_id,p_verdict:verdict,p_note:note.trim()});
+     msg("تأیید مدیر همراه با زمان و هویت ثبت شد.");
+     await loadPresence();
+   }catch(e){msg("تأیید ثبت نشد: "+e.message,true);b.disabled=false;}
+ });
+}
+
 async function issueQR(){
  if(!["owner","executive","manager","kiosk"].includes(role))return;
  try{
