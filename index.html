@@ -103,14 +103,25 @@ window.supabase={createClient:(base,key)=>{
 <button data-tab="requests" id="nav-requests">کالا</button>
 <button data-tab="people" id="nav-people">پرسنل</button>
 <button data-tab="payroll" id="nav-payroll">حقوق</button>
+<button data-tab="shifts" id="nav-shifts">شیفت‌ها</button>
+<button data-tab="finance" id="nav-finance">مالی روزانه</button>
+<button data-tab="inventory" id="nav-inventory">انبار</button>
+<button data-tab="accounts" id="nav-accounts">حساب‌ها</button>
 </div>
 <div id="flash" class="info hide"></div>
-<section id="view-dashboard" class="hide"><div class="card"><h2>داشبورد نظارت مالک</h2><div class="grid"><div class="stat"><span class="muted">پرسنل فعال</span><b id="c-active">—</b></div><div class="stat"><span class="muted">داخل شیفت</span><b id="c-shift">—</b></div><div class="stat"><span class="muted">درخواست باز</span><b id="c-requests">—</b></div><div class="stat"><span class="muted">حساب فعال‌شده</span><b id="c-accounts">—</b></div></div><p class="muted" style="margin-top:15px">بازخوانی خودکار هر ۲۰ ثانیه؛ ثبت‌ها با ساعت سرور انجام می‌شوند.</p></div><div class="card"><h2>آخرین ورود و خروج‌ها</h2><div id="events" class="muted">هنوز موردی ثبت نشده است.</div></div></section>
+<section id="view-dashboard" class="hide"><div class="card"><h2>داشبورد نظارت مالک</h2><div class="grid"><div class="stat"><span class="muted">پرسنل فعال</span><b id="c-active">—</b></div><div class="stat"><span class="muted">داخل شیفت</span><b id="c-shift">—</b></div><div class="stat"><span class="muted">درخواست باز</span><b id="c-requests">—</b></div><div class="stat"><span class="muted">حساب فعال‌شده</span><b id="c-accounts">—</b></div></div><p class="muted" style="margin-top:15px">بازخوانی خودکار هر ۲۰ ثانیه؛ ثبت‌ها با ساعت سرور انجام می‌شوند.</p></div><div class="card"><h2>آخرین ورود و خروج‌ها</h2><div id="events" class="muted">هنوز موردی ثبت نشده است.</div></div>
+<div class="card"><h2>ساختار اعلام‌شده مدیریت RV</h2>
+<div class="row"><b>مالک و ریاست کنسرسیوم</b><span>حامد قنبری درویش</span></div>
+<div class="row"><b>مدیرعامل</b><span>جهانگیر دلجو</span></div>
+<div class="row"><b>مدیر سالن</b><span>امیر ماهنور</span></div>
+<div class="row"><b>سرآشپز</b><span>داوود چرخت (Charhat)</span></div>
+<p class="muted mini">این فهرست، ساختار اعلام‌شده مدیریت است؛ سطح دسترسی واقعی هر حساب در «حساب‌ها» کنترل می‌شود.</p>
+</div></section>
 <section id="view-presence" class="hide"><div class="card"><h2>کنترل و تأیید حضور کارکنان</h2><p class="muted">وضعیت کارکنان فقط از QR زمان‌دار همان شیفت و تأیید مدیر مجاز مشخص می‌شود. «ثبت نشده» به معنای غیبت قطعی نیست.</p><div id="presence-day" class="info">شیفت جاری</div><div class="grid"><div class="stat"><span class="muted">ورود ثبت‌شده</span><b id="presence-in">—</b></div><div class="stat"><span class="muted">خروج ثبت‌شده</span><b id="presence-out">—</b></div><div class="stat"><span class="muted">بدون اسکن امروز</span><b id="presence-none">—</b></div><div class="stat"><span class="muted">تأیید مدیریت</span><b id="presence-reviewed">—</b></div></div><button class="outline block" id="refreshPresence">به‌روزرسانی فهرست</button></div><div class="card"><h2>وضعیت نفر به نفر ـ شامل رانر، ویتر و کارکنان</h2><div id="presence-list" class="muted">فهرست در حال بارگذاری است.</div></div></section>
 <section id="view-attendance" class="hide"><div class="card"><h2>حضور و غیاب QR</h2><p class="muted">با دوربین گوشی، QR زمان‌دار نصب‌شده در محل را اسکن کنید. کد فقط ۷۵ ثانیه اعتبار دارد.</p><div id="scanNotice" class="info">ابتدا با گوشی خود وارد حساب شوید و سپس QR دستگاه محل کار را اسکن کنید.</div><button id="scanButton" class="block" disabled>ثبت ورود یا خروج از QR</button><p id="scanResult" class="muted"></p></div></section>
 <section id="view-kiosk" class="hide"><div class="card"><h2>QR زمان‌دار حضور و غیاب</h2><p class="muted">این صفحه باید روی تبلت یا گوشی ثابتِ محل کار باز باشد. کارکنان با گوشی شخصی و حساب اختصاصی، QR را اسکن می‌کنند.</p><button id="newQR" class="block">ساخت کد جدید</button><div id="qrBox" class="qr-holder"><span style="color:#17382b">برای شروع دکمه بالا را بزنید</span></div><div id="qrExpiry" class="info"></div><p class="muted mini">QR ثابت یا عکس قدیمی پذیرفته نمی‌شود. این روش نیاز به ثبت GPS یا تصویر چهره ندارد.</p></div></section>
 <section id="view-requests" class="hide"><div class="card"><h2>درخواست کالا</h2><div class="field"><label>نام کالا</label><input id="item" maxlength="160" placeholder="مثلاً فیله مرغ"></div><div class="input-row"><div class="field"><label>مقدار</label><input id="qty" type="number" step="0.01" min="0.01" placeholder="۱۲"></div><div class="field"><label>واحد</label><select id="unit"><option>کیلوگرم</option><option>عدد</option><option>بسته</option><option>لیتر</option><option>کارتن</option></select></div></div><div class="field"><label>بخش</label><select id="department"><option>آشپزخانه</option><option>بار</option><option>VIP</option><option>سالن</option><option>خدمات</option></select></div><div class="field"><label>توضیحات</label><textarea id="note" rows="2" maxlength="600" placeholder="مشخصات و ضرورت کالا"></textarea></div><button id="makeRequest" class="block">ارسال درخواست</button></div><div class="card"><h2>گردش درخواست‌ها</h2><p class="muted mini">درخواست ← کنترل انبار ← تأیید مدیر ← خرید ← تحویل ← ثبت مالی ← حسابرسی</p><div id="requestList" style="margin-top:12px"></div></div></section>
-<section id="view-people" class="hide"><div class="card"><h2>پرسنل رویال ویلیج</h2><input id="staffSearch" placeholder="جست‌وجوی نام یا سمت"><div id="staffList" style="margin-top:12px"></div></div></section>
+<section id="view-people" class="hide"><div class="card"><h2>پرسنل رویال ویلیج</h2><input id="staffSearch" placeholder="جست‌وجوی نام یا سمت"><div class="field"><label>وضعیت نمایش</label><select id="staffStatus"><option value="active">فعال</option><option value="inactive">غیرفعال</option><option value="all">همه</option></select></div><div id="staffList" style="margin-top:12px"></div></div></section>
 <section id="view-payroll" class="hide">
   <div class="card"><h2>حقوق ماهانه رستوران</h2>
    <p class="muted">نمایش محرمانه ویژه مالک و واحدهای مالی مجاز. حقوق‌های تعیین‌نشده در محاسبه جمع لحاظ نشده‌اند.</p>
@@ -122,7 +133,49 @@ window.supabase={createClient:(base,key)=>{
    <p class="muted mini" style="margin-top:12px">واحد: تومان؛ پاداش مالک، مزایا و اضافه‌کاری جدا از حقوق ثابت هستند.</p>
   </div>
   <div class="card"><h2>فهرست تفکیکی حقوق</h2><div id="payroll-list"></div></div>
+<div class="card"><h2>پاداش، اضافه‌کاری و کسورات</h2><p class="muted mini">این موارد فقط پس از تأیید حساب مالک در جمع تعدیلات ماهانه لحاظ می‌شوند؛ ثبت به معنی پرداخت نیست.</p><div class="field"><label>ماه (روز اول ماه میلادی)</label><input id="adjustMonth" type="date"></div><div class="row"><div>خالص تعدیلات تأییدشده</div><b id="adjustApproved">—</b></div><div id="adjustEntry"><div class="field"><label>کارمند</label><select id="adjustStaff"></select></div><div class="input-row"><div class="field"><label>نوع</label><select id="adjustType"><option value="bonus">پاداش</option><option value="overtime">اضافه‌کاری</option><option value="deduction">کسورات</option></select></div><div class="field"><label>مبلغ (تومان)</label><input id="adjustAmount" type="number" min="1" step="1"></div></div><div class="field"><label>دلیل الزامی</label><textarea id="adjustNote" maxlength="600" rows="2"></textarea></div><button id="saveAdjust" class="block">ارسال برای تأیید مالک</button></div><button id="refreshAdjust" class="outline block">به‌روزرسانی تعدیلات</button><div id="adjustMsg" class="muted"></div><div id="adjustList"></div></div>
+
 </section>
+<section id="view-shifts" class="hide">
+<div id="shiftCreateCard" class="card"><h2>ثبت شیفت کارکنان</h2><p class="muted mini">برای جلوگیری از تداخل، هر شیفت توسط سامانه بررسی و سابقه تغییر نگهداری می‌شود.</p>
+<div class="field"><label>نیروی فعال</label><select id="shiftStaff"></select></div>
+<div class="input-row"><div class="field"><label>تاریخ</label><input type="date" id="shiftDate"></div><div class="field"><label>واحد</label><input id="shiftDepartment" maxlength="80" placeholder="سالن / آشپزخانه"></div></div>
+<div class="input-row"><div class="field"><label>شروع</label><input type="time" value="16:00" id="shiftStart"></div><div class="field"><label>پایان</label><input type="time" value="23:00" id="shiftEnd"></div></div>
+<div class="field"><label>توضیح</label><textarea id="shiftNote" maxlength="500" rows="2"></textarea></div><button id="saveShift" class="block">ثبت شیفت</button></div>
+<div class="card"><div class="row"><h2 style="margin:0">برنامه ۱۴ روز آینده</h2><button id="refreshShifts" class="outline action">تازه‌سازی</button></div><p id="shiftMsg" class="muted"></p><div id="shiftList"></div></div></section>
+<section id="view-finance" class="hide">
+<div class="card"><h2>نظارت روزانه فروش و هزینه‌ها</h2><p class="muted mini">فقط ارقام واقعیِ ثبت‌شده نمایش داده می‌شوند؛ اختلاف فروش و هزینه، سود خالص نیست.</p>
+<div class="grid"><div class="stat"><span class="muted">فروش ۱۴ روز</span><b id="financeTotal" style="font-size:17px">—</b></div><div class="stat"><span class="muted">هزینه ثبت‌شده</span><b id="financeCosts" style="font-size:17px">—</b></div><div class="stat"><span class="muted">اختلاف</span><b id="financeDifference" style="font-size:17px">—</b></div></div><p id="financeMsg" class="muted"></p>
+<button id="refreshFinance" class="outline block">دریافت آخرین گزارش</button><div id="financeList"></div></div>
+<div id="financeEntry">
+<div class="card"><h2>ثبت فروش روزانه ـ تومان</h2><div class="field"><label>تاریخ</label><input id="salesDay" type="date"></div><div class="grid">
+<div class="field"><label>نقدی</label><input id="salesCash" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label>کارتخوان</label><input id="salesCard" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label>آنلاین</label><input id="salesOnline" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label>سایر</label><input id="salesOther" type="number" min="0" step="1" value="0"></div></div>
+<div class="field"><label>توضیح</label><textarea id="salesNote" maxlength="1200" rows="2"></textarea></div><button id="saveSales" class="block">ثبت فروش با سابقه تغییرات</button></div>
+<div class="card"><h2>ثبت هزینه</h2><div class="field"><label>تاریخ</label><input id="costDay" type="date"></div>
+<div class="field"><label>عنوان هزینه</label><input id="costTitle" maxlength="160" placeholder="عنوان فاکتور"></div>
+<div class="input-row"><div class="field"><label>دسته</label><select id="costCategory"><option>مواد اولیه</option><option>حقوق و مزایا</option><option>تأسیسات</option><option>تبلیغات</option><option>سایر هزینه‌ها</option></select></div>
+<div class="field"><label>مبلغ (تومان)</label><input id="costAmount" type="number" min="1" step="1"></div></div>
+<div class="field"><label>توضیح/شماره فاکتور</label><textarea id="costNote" maxlength="700" rows="2"></textarea></div><button id="saveCost" class="block">ثبت هزینه</button></div></div>
+<div class="card"><h2>هزینه‌های ثبت‌شده</h2><div id="costList"></div></div></section>
+<section id="view-inventory" class="hide">
+<div class="card"><div class="row"><h2 style="margin:0">موجودی انبار</h2><button id="refreshInventory" class="outline action">تازه‌سازی</button></div><p id="inventoryMsg" class="muted"></p><div id="inventoryBalance"></div></div>
+<div id="inventoryEntry" class="card"><h2>ثبت ورود و خروج کالا</h2><div class="field"><label>کالا</label><input id="moveItem" maxlength="160" placeholder="نام کالا یکسان با ثبت قبلی باشد"></div>
+<div class="input-row"><div class="field"><label>واحد</label><select id="moveUnit"><option>کیلوگرم</option><option>عدد</option><option>بسته</option><option>لیتر</option><option>کارتن</option></select></div>
+<div class="field"><label>نوع</label><select id="moveType"><option value="in">ورود به انبار</option><option value="out">خروج از انبار</option></select></div></div>
+<div class="field"><label>مقدار</label><input id="moveQty" type="number" min=".001" step=".001"></div><div class="field"><label>توضیح/فاکتور</label><textarea id="moveNote" rows="2" maxlength="700"></textarea></div>
+<button id="saveMove" class="block">ثبت گردش انبار</button></div>
+<div class="card"><h2>آخرین گردش کالا</h2><div id="inventoryMoves"></div></div></section>
+<section id="view-accounts" class="hide"><div id="accountsAdmin">
+<div class="card"><h2>حساب‌های اختصاصی کارکنان</h2><p class="muted">ایجاد حساب جدید با شناسه داخلی و رمز قوی در Authentication → Users پروژه RV-CONTROL انجام می‌شود. حساب باید تأییدشده باشد؛ سپس مالک در همین صفحه دسترسی را تخصیص می‌دهد. شماره موبایل در این شیوه با پیامک راستی‌آزمایی نمی‌شود.</p>
+<p class="muted mini">قالب شناسه داخلی برای شماره ایران: rv-989xxxxxxxxx@example.com ؛ هیچ رمز عبوری در GitHub ذخیره نمی‌شود.</p>
+<button id="refreshAccounts" class="outline block">دریافت حساب‌ها</button><p id="accountMsg" class="muted"></p><div id="accountList"></div></div>
+<div class="card"><h2>تأیید دسترسی حساب ساخته‌شده</h2><div class="field"><label>کاربر تأییدشده بدون نقش</label><select id="accountUser"></select></div>
+<div class="field"><label>پروفایل کارکنان فعال فاقد حساب</label><select id="accountStaff"></select></div>
+<div class="field"><label>سطح دسترسی</label><select id="accountRole"><option value="staff">کارمند/رانر/ویتر</option><option value="manager">مدیر سالن</option><option value="executive">مدیر ارشد</option><option value="chef">سرآشپز</option><option value="stock">انبار</option><option value="procurement">خرید</option><option value="cashier">صندوق</option><option value="accountant">حسابدار</option><option value="auditor">حسابرس</option></select></div>
+<button id="approveAccount" class="block">تأیید و تخصیص نقش</button></div></div></section>
 </section>
 </main><footer class="foot">RV CONTROL · LE ROYAL VILLAGE CAFÉ · STAFF MANAGEMENT</footer>
 <script>
@@ -142,6 +195,7 @@ function msg(value,bad=false){const box=el("flash");box.textContent=value;box.cl
 function authMessage(value,bad=false){el("authMsg").textContent=value;el("authMsg").classList.remove("hide");el("authMsg").classList.toggle("err",bad);}
 function pretty(t){try{return new Date(t).toLocaleString("fa-IR",{timeZone:"Asia/Tehran",dateStyle:"short",timeStyle:"short"});}catch(e){return t||"";}}
 async function rpc(name,args={}){const r=await db.rpc(name,args);if(r.error)throw r.error;return r.data;}
+window.RVCTRL={el,role:()=>role,db:()=>db,rpc,msg,safe,pretty};
 async function begin(){
  if (!PROJECT || !KEY) {
    el("loading").innerHTML='<h2 style="color:#d7b777;margin-bottom:12px">RV CONTROL · نسخه مستقل</h2><p style="line-height:2">کد برنامه به مخزن اختصاصی منتقل شده است. برای راه‌اندازی ورود کارکنان، حضور و غیاب و حقوق، اتصال پایگاه داده مستقل RV CONTROL باید تکمیل شود.</p><div class="info">ROYAL ONE محفوظ است و هیچ اطلاعاتی از آن در این نسخه خوانده نمی‌شود.</div>';
@@ -154,7 +208,8 @@ async function begin(){
  el("logout").onclick=logout;el("pendingLogout").onclick=logout;
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  el("newQR").onclick=issueQR;el("scanButton").onclick=scanQR;el("makeRequest").onclick=createRequest;
- el("staffSearch").oninput=renderStaff;
+ el("staffSearch").oninput=renderStaff;el("staffStatus").onchange=renderStaff;
+ window.RVCTRLModules?.attach?.();
  el("refreshPresence").onclick=loadPresence;
  const r=await db.auth.getSession();session=r.data.session;
  if(session)await prepare();else show("auth");
@@ -216,6 +271,11 @@ async function prepare(){
   el("nav-requests").classList.toggle("hide",role==="kiosk");
   el("nav-attendance").classList.toggle("hide",role==="kiosk");
   el("nav-payroll").classList.toggle("hide",!["owner","auditor","accountant"].includes(role));
+  el("nav-shifts").classList.toggle("hide",role==="kiosk");
+  el("nav-finance").classList.toggle("hide",!["owner","executive","manager","accountant","auditor"].includes(role));
+  el("nav-inventory").classList.toggle("hide",!["owner","executive","manager","stock","procurement","chef","accountant","auditor"].includes(role));
+  el("nav-accounts").classList.toggle("hide",role!=="owner");
+  window.RVCTRLModules?.onRole?.(role);
   const hash=location.hash;
   if(hash.startsWith("#scan=")){qrToken=hash.slice(6);nav("attendance");el("scanNotice").textContent="QR اسکن شد. برای ثبت رویداد از دکمه زیر استفاده کن.";el("scanButton").disabled=false;}
   else nav(["owner","executive","manager","auditor"].includes(role)?"dashboard":role==="kiosk"?"kiosk":"attendance");
@@ -225,13 +285,14 @@ async function logout(){await db.auth.signOut();session=null;role=null;qrToken=n
 function nav(next){
  tab=next;el("flash").classList.add("hide");
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===next));
- ["dashboard","presence","attendance","kiosk","requests","people","payroll"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
+ ["dashboard","presence","attendance","kiosk","requests","people","payroll","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
  if(next==="dashboard")loadDashboard(true);
  if(next==="presence")loadPresence();
  if(next==="requests")loadRequests();
  if(next==="people")loadStaff();
  if(next==="payroll")loadPayroll();
  if(next==="kiosk"&&!qrToken)issueQR();
+ window.RVCTRLModules?.loadTab?.(next);
 }
 async function loadDashboard(noisy){
  try{
@@ -333,13 +394,13 @@ function renderRequests(){
  document.querySelectorAll("[data-advance]").forEach(b=>b.onclick=async()=>{const id=b.getAttribute("data-advance");const r=requests.find(x=>x.id===id);if(!r)return;const next=stageNext[r.status];const note=prompt("توضیح این مرحله (در صورت نیاز):")||"";try{await rpc("rvctl_advance_request",{p_request_id:id,p_next:next,p_note:note});msg("مرحله ثبت شد.");await loadRequests();}catch(e){msg("ثبت مرحله ناموفق: "+e.message,true);}});
 }
 async function loadStaff(){
- try{const r=await db.from("rvctl_staff").select("full_name,department,job_title,active").order("department");
+ try{const r=await db.from("rvctl_staff").select("id,full_name,department,job_title,active").order("department");
  if(r.error)throw r.error;staff=(r.data||[]).filter(x=>x.department!=="رویال مال");renderStaff();
  }catch(e){el("staffList").textContent="خطا در دریافت فهرست: "+e.message;}
 }
 function renderStaff(){
- const query=el("staffSearch").value.trim();
- el("staffList").innerHTML=staff.filter(s=>(s.full_name+s.department+s.job_title).includes(query)).map(s=>'<div class="row"><div><b>'+safe(s.full_name)+'</b><div class="muted mini">'+safe(s.job_title)+' · '+safe(s.department)+'</div></div><span class="tag">'+(s.active?"فعال":"غیرفعال")+'</span></div>').join("")||'<div class="muted">موردی پیدا نشد.</div>';
+ const query=el("staffSearch").value.trim();const status=el("staffStatus").value;
+ el("staffList").innerHTML=staff.filter(s=>(status==="all"||(status==="active"&&s.active)||(status==="inactive"&&!s.active))&&(s.full_name+s.department+s.job_title).includes(query)).map(s=>'<div class="row"><div><b>'+safe(s.full_name)+'</b><div class="muted mini">'+safe(s.job_title)+' · '+safe(s.department)+'</div></div><span class="tag">'+(s.active?"فعال":"غیرفعال")+'</span></div>').join("")||'<div class="muted">موردی پیدا نشد.</div>';
 }
 async function loadPayroll(){
  if(!["owner","auditor","accountant"].includes(role)){msg("این بخش محرمانه است.",true);return;}
@@ -359,4 +420,5 @@ async function loadPayroll(){
 window.addEventListener("load",begin);
 })();
 </script>
+<script src="./rv-modules.js" defer></script>
 </body></html>
