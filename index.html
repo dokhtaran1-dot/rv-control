@@ -387,11 +387,40 @@ async function loadRequests(){
 }
 function renderRequests(){
  el("requestList").innerHTML=requests.map(r=>{
- let next=stageNext[r.status],allowed=next&&(role==="owner"||(approver[next]||[]).includes(role));
- let action=allowed?'<button class="action" data-advance="'+safe(r.id)+'">ثبت مرحله «'+safe(statLabel[next])+'»</button>':'';
- return '<div class="row" style="align-items:flex-start"><div><b>'+safe(r.item_name)+'</b> · '+safe(r.quantity)+' '+safe(r.unit)+'<div class="muted mini">'+safe(r.department)+' · '+safe(pretty(r.created_at))+'</div><div class="tag" style="display:inline-block;margin-top:7px">'+safe(statLabel[r.status]||r.status)+'</div></div><div>'+action+'</div></div>';
+ const next=stageNext[r.status];
+ const allowed=next&&(role==="owner"||(approver[next]||[]).includes(role));
+ const rejectable=["requested","stock_checked","approved"].includes(r.status)&&["owner","executive","manager"].includes(role);
+ const advance=allowed?'<button class="action" data-advance="'+safe(r.id)+'">ثبت مرحله «'+safe(statLabel[next])+'»</button>':"";
+ const reject=rejectable?'<button class="outline action" data-reject="'+safe(r.id)+'">رد با دلیل</button>':"";
+ const price=r.price_total!==null&&r.price_total!==undefined?'<div class="muted mini">مبلغ خرید: '+Number(r.price_total).toLocaleString("fa-IR")+' تومان</div>':"";
+ const invoice=r.invoice_number?'<div class="muted mini">شماره فاکتور: '+safe(r.invoice_number)+'</div>':"";
+ return '<div class="row" style="align-items:flex-start"><div><b>'+safe(r.item_name)+'</b> · '+safe(r.quantity)+' '+safe(r.unit)+'<div class="muted mini">'+safe(r.department)+' · '+safe(pretty(r.created_at))+'</div>'+price+invoice+'<div class="tag" style="display:inline-block;margin-top:7px">'+safe(statLabel[r.status]||r.status)+'</div></div><div>'+advance+reject+'</div></div>';
  }).join("")||'<p class="muted">درخواستی ثبت نشده است.</p>';
- document.querySelectorAll("[data-advance]").forEach(b=>b.onclick=async()=>{const id=b.getAttribute("data-advance");const r=requests.find(x=>x.id===id);if(!r)return;const next=stageNext[r.status];const note=prompt("توضیح این مرحله (در صورت نیاز):")||"";try{await rpc("rvctl_advance_request",{p_request_id:id,p_next:next,p_note:note});msg("مرحله ثبت شد.");await loadRequests();}catch(e){msg("ثبت مرحله ناموفق: "+e.message,true);}});
+ document.querySelectorAll("[data-advance]").forEach(b=>b.onclick=async()=>{
+  const id=b.getAttribute("data-advance"),item=requests.find(x=>x.id===id);if(!item)return;
+  const next=stageNext[item.status];
+  const note=prompt("توضیح این مرحله (انصراف = لغو عملیات):");if(note===null)return;
+  let amount=null,invoice=null;
+  if(next==="purchased"){
+    const raw=prompt("مبلغ قطعی خرید به تومان را وارد کنید:");if(raw===null)return;
+    amount=Number(raw);if(!Number.isFinite(amount)||amount<=0){msg("مبلغ خرید معتبر نیست.",true);return;}
+    invoice=prompt("شماره فاکتور خرید را وارد کنید:");if(invoice===null)return;
+    invoice=invoice.trim();if(!invoice){msg("شماره فاکتور الزامی است.",true);return;}
+  }
+  b.disabled=true;
+  try{
+    await rpc("rvctl_advance_request",{p_request_id:id,p_next:next,p_note:note,p_amount:amount,p_invoice:invoice});
+    msg(next==="received"?"تحویل کالا ثبت و موجودی انبار به‌صورت خودکار افزایش یافت.":"مرحله با سوابق مدیریتی ثبت شد.");
+    await loadRequests();
+  }catch(e){msg("ثبت مرحله ناموفق: "+e.message,true);b.disabled=false;}
+ });
+ document.querySelectorAll("[data-reject]").forEach(b=>b.onclick=async()=>{
+  const reason=prompt("دلیل رد درخواست را بنویسید (حداقل ۸ حرف):");
+  if(reason===null)return;if(reason.trim().length<8){msg("دلیل رد کافی نیست.",true);return;}
+  b.disabled=true;
+  try{await rpc("rvctl_advance_request",{p_request_id:b.dataset.reject,p_next:"rejected",p_note:reason.trim()});msg("درخواست با ثبت دلیل رد شد.");await loadRequests();}
+  catch(e){msg("رد درخواست ناموفق: "+e.message,true);b.disabled=false;}
+ });
 }
 async function loadStaff(){
  try{const r=await db.from("rvctl_staff").select("id,full_name,department,job_title,active").order("department");
