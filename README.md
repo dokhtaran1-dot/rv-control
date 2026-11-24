@@ -1,44 +1,56 @@
-# RV CONTROL · Le Royal Village Café
+# RV CONTROL — Sahand Consortium / Royal Village Café
 
-Independent restaurant operations app under Sahand Consortium / Royal Mall.
+**Independent restaurant staff and operations control app.**
 
-## Current verified state — 2026-11-22
+## Canonical implementation — 2026-11-25
+- GitHub source deployed: **dokhtaran1-dot/rv-control**, branch main. Different repository from Royal One (dokhtaran1-dot/sahand-flutter-app).
+- Public static frontend: https://dokhtaran1-dot.github.io/rv-control/
+- Dedicated Supabase project: **RV-CONTROL** (wtwbemwyntvocdilaukk), separate from Royal One.
+- index.html contains login, owner overview, 75-second QR attendance, staff roster, purchase workflow and protected base payroll.
+- rv-modules.js provides 14-day shift planning, daily sales and costs, inventory ledger, bonus/deduction reviews and restricted staff-account authorization.
+- Legacy branch sahand-flutter-app/rv-control-pages was inspected READ-ONLY. It is not the canonical deployed RV CONTROL. The Royal One main branch was not changed.
 
-- **GitHub repository:** `dokhtaran1-dot/rv-control`, branch `main`.
-- **Dedicated Supabase project:** `RV-CONTROL` (`wtwbemwyntvocdilaukk`), healthy; creation quote **$0/month** (free-tier limits apply).
-- The web frontend in `index.html` connects **only** to the dedicated RV-CONTROL backend, not to Royal One.
-- Independent database contains **21 active RV staff**, **9 inactive/former/Royal Mall-only entries**, **21 salary records**, and **3 deliberately blank salaries**; known salary sum is **632,000,000 toman**.
-- The old Royal One project and repository have not been modified by this migration.
-- **GitHub Pages is not yet enabled** (`has_pages=false` at last verification).
-- Owner/staff accounts are **not yet onboarded**. The app is not ready for live use until roles are assigned and verified.
+## Current data — no fake values
+- 28 historical staff rows: 21 active, 7 inactive. None removed during these updates.
+- 21 salary records including 3 intentionally unknown amounts. Salary amounts are private database content, not GitHub source.
+- One confirmed and previously signed-in Auth user has the owner app role, linked to **ترانه (محمدیان)**.
+- User states that **حامد قنبری درویش** is the legal owner. Do NOT silently remove Taraneh's current account; create/confirm Hamed's separate login identity before reconciling delegated application role.
+- No actual attendance scans, scheduled shifts, recorded daily sales/costs, inventory movements or payroll adjustments in latest database counts.
+- No other active employee or manager Auth user profiles are confirmed.
+- Free tier only; no paid plans, SMS or OTP provider enabled.
 
-## Publish the public frontend (data stays private)
+## Authentication — mobile identifier + password without SMS
+Staff number is used as a LOGIN IDENTIFIER, not verified ownership of the phone number.
+Iranian phone 0914xxxxxxx is transformed to an internal reserved alias such as rv-98914xxxxxxx@example.com. This is NOT a real mailbox. An administrator must create and confirm that account in the independent project's Supabase Authentication > Users and only then approve it for an active RV staff member in the owner-only Accounts tab. Do not share or commit passwords.
+Privileged automated Auth user creation was NOT deployed.
+Real phone/browser password authentication tests still require a user-controlled login.
 
-GitHub → repo **Settings** → **Pages** → **Build and deployment** → set **Source** to `GitHub Actions` → Save.\n\nThe repository already contains `.github/workflows/deploy-pages.yml` and will publish on the next `main` push. The first attempt to auto-enable Pages failed with GitHub's `Resource not accessible by integration` (Pages site creation denied to the workflow token). A repository administrator must enable Pages once in Settings; after that we can rerun or retrigger the deployment.
-Then check `https://dokhtaran1-dot.github.io/rv-control/`.
-The repository is public, so **never commit passwords, private salary lists, employee IDs, secret keys, or service-role keys**. A Supabase **publishable key** is safe in a browser but access control depends on Auth and RLS.
+## Permissions and backend
+Database roles: owner, executive, manager, chef, stock, procurement, cashier, accountant, auditor, staff and kiosk. All sensitive RPC functions independently verify role on the server.
+- 14-day shifts: non-overlap, cancellation and audit; employees can see their own future shifts.
+- Attendance: rotating 75-second QR, check-in and check-out, management review with notes. No scan is NOT evidence of confirmed absence.
+- Daily sales and costs: change history, expense reversal with reason, time-bounded reports; difference is NOT net profit.
+- Payroll adjustments: proposal, owner approval/rejection, and role-protected listings.
+- Warehouse: inbound/outbound append-only movements and recorded-balance checks.
+- Access board: existing confirmed Supabase Auth users may be assigned to active staff by the authorized owner account; no browser-side role grant.
+- Sensitive new tables have RLS enabled and direct privileges revoked for public/anon/authenticated users; access uses guarded RPCs.
 
-## Authentication
+## Requested management directory
+- Legal owner/president: حامد قنبری درویش
+- CEO: جهانگیر دلجو
+- Salon manager: امیر ماهنور
+- Head chef: داوود چرخت (Charhat)
+- ناصر سلمان‌زاده and مسعود اتحاد‌نژاد are excluded from current management.
+The directory is informative, not an Auth role assignment.
 
-Employee signup alone grants **no** access. Owner must approve role in `rvctl_access` referencing the user's confirmed Auth UUID. Do not assign owner rights based on email text alone. The owner account must be verified before activating staff accounts. No service upgrades or paid operations were activated.
+## Verified versus awaiting live test
+- GitHub Pages workflow succeeded on latest independent frontend commit.
+- Source syntax validated and no legacy Royal One Supabase project URL in active frontend.
+- Supabase backend ACTIVE_HEALTHY; structure and selected role-based SQL read paths checked.
+- Anonymous EXECUTE privilege denied on all RV CONTROL RPC functions.
+- NOT LIVE-TESTED end-to-end: employee mobile/password login in Android browser, true QR scans on premises, real stock entry/exit, actual payroll approval, sales/expense data entry, individual staff permissions and owner identity handover.
+- Do not describe any untested behavior as complete.
 
-## Implemented modules
-
-Owner reporting dashboard; login and per-role access; time-limited QR attendance; staff roster; owner-approved purchase workflow; inventory requests; confidential salary display.
-
-## Security
-
-- All public-data tables have RLS enabled.
-- Anonymous table access and salary access by nonprivileged employees are blocked.
-- Privileged RPC functions check authenticated role on every call.
-- The QR challenge storage has RLS without a SELECT policy intentionally (tokens cannot be enumerated by the client).
-- Before production: test end-to-end authentication, staff QR scanning, approval transitions and payroll visibility.
-
-## Pending
-
-1. Turn on GitHub Pages.
-2. Set up and authorize the verified owner identity.
-3. Validate real sign-in, QR scanning, warehouse workflow and permission boundaries.
-4. Optional: Android home-screen install via PWA when tested.
-
-No expenses above the free tier were approved or enabled.
+## Data separation
+Only public static HTML/JS and publishable project key are in GitHub. Private salaries, staff records, sales and authentication data remain in dedicated RV-CONTROL Supabase. Never commit secrets, service-role keys, raw employee data, passwords, or contact details into public frontend.
+No Royal One services, database, or main-branch files should be modified.
