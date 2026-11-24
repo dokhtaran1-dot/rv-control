@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'rv-modules.js'
+      - 'scripts/check-rv.mjs'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -19,18 +21,22 @@ concurrency:
 
 jobs:
   build:
-    name: Prepare static RV CONTROL site
+    name: Validate and prepare independent RV CONTROL site
     runs-on: ubuntu-latest
     steps:
-      - name: Check out RV CONTROL
+      - name: Check out independent RV CONTROL
         uses: actions/checkout@v4
+      - name: Validate JavaScript and DOM references
+        run: node scripts/check-rv.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-      - name: Prepare public assets
+      - name: Prepare complete static website
         run: |
           mkdir -p dist
-          cp index.html dist/index.html
+          cp index.html rv-modules.js dist/
           touch dist/.nojekyll
+          test -s dist/index.html
+          test -s dist/rv-modules.js
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
