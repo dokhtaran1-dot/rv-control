@@ -91,7 +91,7 @@ window.supabase={createClient:(base,key)=>{
 <header class="head"><div class="brand"><div class="mark">RV</div><div><div class="eng">RV CONTROL</div><div class="tiny">LE ROYAL VILLAGE CAFÉ · STAFF MANAGEMENT</div></div></div><div class="subtitle">سامانه خصوصی مدیریت و نظارت رویال ویلیج کافه</div></header>
 <main class="wrap">
 <div id="loading" class="card muted">در حال اتصال امن به سامانه…</div>
-<section id="auth" class="hide"><div class="card" style="max-width:450px;margin:25px auto"><h2>ورود اختصاصی کارکنان RV</h2><p class="muted">ورود فقط برای حساب‌های مجاز رستوران فعال است.</p><div class="input-row" style="margin-top:12px"><button id="phoneMode" class="block">موبایل و رمز</button><button id="emailMode" class="outline block">ایمیل قبلی</button></div><div id="phoneField" class="field"><label for="phone">شماره موبایل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="09123456789 یا +994..." dir="ltr"></div><div id="emailField" class="field hide"><label for="email">ایمیل</label><input id="email" type="email" placeholder="name@example.com" autocomplete="email" dir="ltr"></div><div class="field"><label for="pass">رمز عبور</label><input id="pass" type="password" autocomplete="current-password" placeholder="حداقل ۸ کاراکتر" dir="ltr"></div><button id="loginBtn" class="block">ورود</button><button id="signupBtn" class="outline block hide">ثبت‌نام اولیه با ایمیل</button><div id="authMsg" class="info hide"></div><p class="muted mini" id="authHelp">ورود با شماره به‌عنوان شناسه و رمز عبور است؛ پیامک و تأیید مالکیت شماره ندارد. حساب باید قبلاً توسط مدیر ساخته شده باشد؛ ثبت‌نام به‌تنهایی دسترسی نمی‌دهد.</p></div></section>
+<section id="auth" class="hide"><div class="card" style="max-width:450px;margin:25px auto"><h2>ورود امن مدیریت RV و حقوق رویال مال</h2><p class="muted">ورود فقط برای حساب‌های مجاز رستوران یا پنل مستقل حقوق رویال مال فعال است.</p><div class="input-row" style="margin-top:12px"><button id="phoneMode" class="block">موبایل و رمز</button><button id="emailMode" class="outline block">ایمیل قبلی</button></div><div id="phoneField" class="field"><label for="phone">شماره موبایل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="09123456789 یا +994..." dir="ltr"></div><div id="emailField" class="field hide"><label for="email">ایمیل</label><input id="email" type="email" placeholder="name@example.com" autocomplete="email" dir="ltr"></div><div class="field"><label for="pass">رمز عبور</label><input id="pass" type="password" autocomplete="current-password" placeholder="حداقل ۸ کاراکتر" dir="ltr"></div><button id="loginBtn" class="block">ورود</button><button id="signupBtn" class="outline block hide">ثبت‌نام اولیه با ایمیل</button><div id="authMsg" class="info hide"></div><p class="muted mini" id="authHelp">ورود با شماره به‌عنوان شناسه و رمز عبور است؛ پیامک و تأیید مالکیت شماره ندارد. حساب باید قبلاً توسط مدیر ساخته شده باشد؛ ثبت‌نام به‌تنهایی دسترسی نمی‌دهد.</p></div></section>
 <section id="pending" class="hide"><div class="card"><h2>حساب شما هنوز مجوز ندارد</h2><p>ورود موفق بود؛ اما این حساب هنوز به فهرست مجاز RV CONTROL متصل نشده است.</p><div class="info">برای فعال شدن پنل مالک یا حساب کارکنان، مدیر سامانه باید نقش را در پایگاه داده تأیید کند.</div><button id="pendingLogout" class="outline block">خروج</button></div></section>
 <section id="app" class="hide">
 <div class="card" style="padding:12px 16px"><div class="row"><div><b id="userName">کاربر</b><div id="roleText" class="muted"></div></div><button class="outline action" id="logout">خروج</button></div></div>
@@ -102,7 +102,8 @@ window.supabase={createClient:(base,key)=>{
 <button data-tab="kiosk" id="nav-kiosk">QR شیفت</button>
 <button data-tab="requests" id="nav-requests">کالا</button>
 <button data-tab="people" id="nav-people">پرسنل</button>
-<button data-tab="payroll" id="nav-payroll">حقوق</button>
+<button data-tab="payroll" id="nav-payroll">حقوق رستوران</button>
+<button data-tab="mall-payroll" id="nav-mall-payroll" class="hide">حقوق رویال مال</button>
 <button data-tab="shifts" id="nav-shifts">شیفت‌ها</button>
 <button data-tab="finance" id="nav-finance">مالی روزانه</button>
 <button data-tab="inventory" id="nav-inventory">انبار</button>
@@ -168,6 +169,29 @@ window.supabase={createClient:(base,key)=>{
 <div class="field"><label>مقدار</label><input id="moveQty" type="number" min=".001" step=".001"></div><div class="field"><label>توضیح/فاکتور</label><textarea id="moveNote" rows="2" maxlength="700"></textarea></div>
 <button id="saveMove" class="block">ثبت گردش انبار</button></div>
 <div class="card"><h2>آخرین گردش کالا</h2><div id="inventoryMoves"></div></div></section>
+<section id="view-mall-payroll" class="hide">
+<div class="card"><h2>حقوق کارکنان مجتمع رویال مال تبریز</h2>
+<p class="muted">این پرونده فقط مخصوص کارکنان خود پاساژ است؛ حقوق پرسنل رویال ویلیج کافه در بخش جداگانه‌ای نگهداری می‌شود. هیچ فیش، رقم یا پرسنلی از رستوران به این قسمت منتقل نمی‌شود.</p>
+<div class="row"><span id="mall-user-role" class="tag">دسترسی ویژه مالی پاساژ</span><button class="outline action" id="mall-refresh">تازه‌سازی</button></div>
+<div class="field"><label>ماه حقوق (میلادی؛ صرفاً برای ثبت منظم دوره)</label><input type="month" id="mall-month"></div>
+<div class="grid">
+<div class="stat"><span class="muted">کارکنان فعال ثبت‌شده پاساژ</span><b id="mall-count">—</b></div>
+<div class="stat"><span class="muted">حقوق پایه واردنشده</span><b id="mall-unentered">—</b></div>
+<div class="stat"><span class="muted">جمع پایه ثبت‌شده</span><b id="mall-base" style="font-size:16px">—</b></div>
+<div class="stat"><span class="muted">جمع خالص محاسباتی ثبت‌شده</span><b id="mall-net" style="font-size:16px">—</b></div>
+</div><p id="mall-payroll-info" class="muted">هنوز پرونده حقوق این ماه بارگذاری نشده است.</p></div>
+<div id="mall-add-person-card" class="card hide"><h2>ثبت یا اصلاح پرسنل خود پاساژ</h2>
+<p class="muted mini">ثبت این بخش به‌معنی استخدام، ثبت قرارداد یا پرداخت حقوق نیست.</p>
+<input type="hidden" id="mall-person-id">
+<div class="field"><label>نام و نام خانوادگی</label><input id="mall-name" maxlength="140" placeholder="نام واقعی کارمند پاساژ"></div>
+<div class="input-row"><div class="field"><label>سمت</label><input id="mall-position" maxlength="120" placeholder="حراست، مدیریت، خدمات..."></div>
+<div class="field"><label>واحد</label><input id="mall-unit" maxlength="100" placeholder="حراست / دفتر / تأسیسات"></div></div>
+<div class="row"><label><input type="checkbox" checked id="mall-active"> پرسنل فعال</label></div>
+<div class="row"><button class="action" id="mall-save-person">ذخیره مشخصات کارمند</button><button class="outline action" id="mall-reset-person">پاک‌کردن فرم</button></div></div>
+<div class="card"><div class="row"><h2 style="margin:0">فهرست حقوق پاساژ</h2></div>
+<div class="field"><label>جست‌وجوی نام، سمت یا واحد</label><input id="mall-search" placeholder="جست‌وجوی پرسنل رویال مال"></div>
+<p class="muted mini">برای هر نفر حقوق پایه، پاداش، کسورات، خالص محاسباتی و وضعیت تأیید یا پرداخت ثبت می‌شود. «ثبت پرداخت» تنها وضعیت پرونده را تغییر می‌دهد و انتقال وجه بانکی نیست.</p>
+<div id="mall-roster"></div></div></section>
 <section id="view-accounts" class="hide"><div id="accountsAdmin">
 <div class="card"><h2>حساب‌های اختصاصی کارکنان</h2><p class="muted">ایجاد حساب جدید با شناسه داخلی و رمز قوی در Authentication → Users پروژه RV-CONTROL انجام می‌شود. حساب باید تأییدشده باشد؛ سپس مالک در همین صفحه دسترسی را تخصیص می‌دهد. شماره موبایل در این شیوه با پیامک راستی‌آزمایی نمی‌شود.</p>
 <p class="muted mini">قالب شناسه داخلی برای شماره ایران: rv-989xxxxxxxxx@example.com ؛ هیچ رمز عبوری در GitHub ذخیره نمی‌شود.</p>
@@ -209,7 +233,7 @@ async function begin(){
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  el("newQR").onclick=issueQR;el("scanButton").onclick=scanQR;el("makeRequest").onclick=createRequest;
  el("staffSearch").oninput=renderStaff;el("staffStatus").onchange=renderStaff;
- window.RVCTRLModules?.attach?.();
+ window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();
  el("refreshPresence").onclick=loadPresence;
  const r=await db.auth.getSession();session=r.data.session;
  if(session)await prepare();else show("auth");
@@ -260,9 +284,10 @@ async function auth(signup){
 async function prepare(){
  try{
   role=await rpc("rvctl_current_role");
-  if(!role){show("pending");return;}
+  await window.MallPayroll?.authorize?.();
+  if(!role&&!window.MallPayroll?.enabled?.()){show("pending");return;}
   const u=await db.auth.getUser();el("userName").textContent=u.data.user?.phone||u.data.user?.email||"کاربر";
-  el("roleText").textContent="سطح دسترسی: "+(roles[role]||role);
+  el("roleText").textContent=role?"سطح دسترسی RV: "+(roles[role]||role):"دسترسی اختصاصی حقوق رویال مال";
   show("app");
   el("nav-dashboard").classList.toggle("hide",!["owner","executive","manager","auditor"].includes(role));
   el("nav-presence").classList.toggle("hide",!["owner","executive","manager","auditor"].includes(role));
@@ -276,16 +301,18 @@ async function prepare(){
   el("nav-inventory").classList.toggle("hide",!["owner","executive","manager","stock","procurement","chef","accountant","auditor"].includes(role));
   el("nav-accounts").classList.toggle("hide",role!=="owner");
   window.RVCTRLModules?.onRole?.(role);
+  if(!role)document.querySelectorAll("[data-tab]").forEach(b=>{if(b.dataset.tab!=="mall-payroll")b.classList.add("hide");});
+  if(!role){nav("mall-payroll");return;}
   const hash=location.hash;
   if(hash.startsWith("#scan=")){qrToken=hash.slice(6);nav("attendance");el("scanNotice").textContent="QR اسکن شد. برای ثبت رویداد از دکمه زیر استفاده کن.";el("scanButton").disabled=false;}
   else nav(["owner","executive","manager","auditor"].includes(role)?"dashboard":role==="kiosk"?"kiosk":"attendance");
  }catch(e){show("pending");}
 }
-async function logout(){await db.auth.signOut();session=null;role=null;qrToken=null;show("auth");}
+async function logout(){await db.auth.signOut();session=null;role=null;qrToken=null;window.MallPayroll?.reset?.();show("auth");}
 function nav(next){
  tab=next;el("flash").classList.add("hide");
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===next));
- ["dashboard","presence","attendance","kiosk","requests","people","payroll","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
+ ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
  if(next==="dashboard")loadDashboard(true);
  if(next==="presence")loadPresence();
  if(next==="requests")loadRequests();
@@ -293,6 +320,7 @@ function nav(next){
  if(next==="payroll")loadPayroll();
  if(next==="kiosk"&&!qrToken)issueQR();
  window.RVCTRLModules?.loadTab?.(next);
+ if(next==="mall-payroll")window.MallPayroll?.load?.();
 }
 async function loadDashboard(noisy){
  try{
@@ -450,4 +478,5 @@ window.addEventListener("load",begin);
 })();
 </script>
 <script src="./rv-modules.js" defer></script>
+<script src="./mall-payroll.js" defer></script>
 </body></html>
