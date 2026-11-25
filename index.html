@@ -105,6 +105,7 @@ window.supabase={createClient:(base,key)=>{
 <button data-tab="payroll" id="nav-payroll">حقوق رستوران</button>
 <button data-tab="mall-payroll" id="nav-mall-payroll" class="hide">حقوق رویال مال</button>
 <button data-tab="my-payroll" id="nav-my-payroll" class="hide">فیش حقوقی من</button>
+<button data-tab="performance" id="nav-performance" class="hide">ارزیابی عملکرد</button>
 <button data-tab="shifts" id="nav-shifts">شیفت‌ها</button>
 <button data-tab="finance" id="nav-finance">مالی روزانه</button>
 <button data-tab="inventory" id="nav-inventory">انبار</button>
@@ -176,6 +177,15 @@ window.supabase={createClient:(base,key)=>{
 <button class="outline block" id="my-payroll-refresh">به‌روزرسانی فیش من</button>
 <p id="my-payroll-info" class="info">در حال دریافت فیش شخصی...</p></div>
 <div id="my-payroll-list"></div>
+</section>
+<section id="view-performance" class="hide">
+ <div class="card"><h2>ارزیابی عملکرد ماهانه · رویال مال</h2>
+ <p class="muted">دوره آزمایشی با امتیاز ۱۰۰: انجام وظایف و دستورهای کاری مجاز (۴۰)، نظم و وقت‌شناسی (۲۰)، رضایت مشتری (۲۰)، رفتار و همکاری (۲۰). مدیر مستقیم ارزیابی را مستند می‌کند و مالک تأیید نهایی می‌دهد.</p>
+ <p class="muted mini">پاداش مالک، پاداش مدیریت و پاداش رأی مشتریان مستقل هستند و تنها با تصمیم مالک و طی فرایند قانونی به حقوق اعمال می‌شوند. امتیاز به‌تنهایی هیچ پرداخت یا کسری ایجاد نمی‌کند.</p>
+ <div class="input-row"><div class="field"><label>ماه ارزیابی (میلادی)</label><input type="month" id="p-month" dir="ltr"></div><button class="outline action" id="p-refresh">تازه‌سازی</button></div>
+ <p id="p-summary" class="mini muted"></p><p id="p-message" class="info">برای مشاهده ارزیابی وارد حساب مجاز شوید.</p>
+ </div>
+ <div id="p-list"></div>
 </section>
 <section id="view-mall-payroll" class="hide">
 <div class="card"><h2>حقوق کارکنان مجتمع رویال مال تبریز</h2>
@@ -251,7 +261,7 @@ async function begin(){
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  el("newQR").onclick=issueQR;el("scanButton").onclick=scanQR;el("makeRequest").onclick=createRequest;
  el("staffSearch").oninput=renderStaff;el("staffStatus").onchange=renderStaff;
- window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();
+ window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();window.MallPerformance?.setup?.();
  el("refreshPresence").onclick=loadPresence;
  el("my-payroll-refresh").onclick=loadMyPayroll;
  const r=await db.auth.getSession();session=r.data.session;
@@ -315,6 +325,7 @@ async function prepare(){
   await window.MallPayroll?.authorize?.();
   employeePayrollRole=null;
   try{employeePayrollRole=await rpc("rvmall_payroll_employee_role");}catch(_){}
+  await window.MallPerformance?.authorize?.();
   if(!role&&!window.MallPayroll?.enabled?.()&&employeePayrollRole!=="mall_employee"){show("pending");return;}
   const u=await db.auth.getUser();
   let accountLabel=u.data.user?.phone||u.data.user?.email||"کاربر";
@@ -342,7 +353,7 @@ async function prepare(){
   el("nav-my-payroll").classList.toggle("hide",employeePayrollRole!=="mall_employee");
   if(!role){
    const onlyEmployee=employeePayrollRole==="mall_employee"&&!window.MallPayroll?.enabled?.();
-   document.querySelectorAll("[data-tab]").forEach(b=>{if(b.dataset.tab!==(onlyEmployee?"my-payroll":"mall-payroll"))b.classList.add("hide");});
+   document.querySelectorAll("[data-tab]").forEach(b=>{if(b.dataset.tab!==(onlyEmployee?"my-payroll":"mall-payroll")&&!(b.dataset.tab==="performance"&&window.MallPerformance?.enabled?.()))b.classList.add("hide");});
    nav(onlyEmployee?"my-payroll":"mall-payroll");
    return;
   }
@@ -351,12 +362,13 @@ async function prepare(){
   else nav(["owner","executive","manager","auditor"].includes(role)?"dashboard":role==="kiosk"?"kiosk":"attendance");
  }catch(e){show("pending");}
 }
-async function logout(){await db.auth.signOut();session=null;role=null;employeePayrollRole=null;qrToken=null;window.MallPayroll?.reset?.();el("nav-my-payroll").classList.add("hide");show("auth");}
+async function logout(){await db.auth.signOut();session=null;role=null;employeePayrollRole=null;qrToken=null;window.MallPayroll?.reset?.();window.MallPerformance?.reset?.();el("nav-my-payroll").classList.add("hide");show("auth");}
 function nav(next){
  if(next==="my-payroll"&&employeePayrollRole!=="mall_employee")return;
+ if(next==="performance"&&!window.MallPerformance?.enabled?.())return;
  tab=next;el("flash").classList.add("hide");
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===next));
- ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","my-payroll","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
+ ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","my-payroll","performance","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
  if(next==="dashboard")loadDashboard(true);
  if(next==="presence")loadPresence();
  if(next==="requests")loadRequests();
@@ -366,6 +378,7 @@ function nav(next){
  window.RVCTRLModules?.loadTab?.(next);
  if(next==="mall-payroll")window.MallPayroll?.load?.();
  if(next==="my-payroll")loadMyPayroll();
+ if(next==="performance")window.MallPerformance?.load?.();
 }
 async function loadMyPayroll(){
  const info=el("my-payroll-info"), list=el("my-payroll-list");
@@ -545,4 +558,5 @@ window.addEventListener("load",begin);
 </script>
 <script src="./rv-modules.js" defer></script>
 <script src="./mall-payroll.js" defer></script>
+<script src="./mall-performance.js" defer></script>
 </body></html>
