@@ -6,6 +6,7 @@ on:
     paths:
       - 'index.html'
       - 'rv-modules.js'
+      - 'mall-payroll.js'
       - 'scripts/check-rv.mjs'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
@@ -33,10 +34,11 @@ jobs:
       - name: Prepare complete static website
         run: |
           mkdir -p dist
-          cp index.html rv-modules.js dist/
+          cp index.html rv-modules.js mall-payroll.js dist/
           touch dist/.nojekyll
           test -s dist/index.html
           test -s dist/rv-modules.js
+          test -s dist/mall-payroll.js
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
