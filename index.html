@@ -259,10 +259,19 @@ function normalizePhone(raw){
  if(/^\+\d{8,15}$/.test(value))return value;
  return null;
 }
-function phoneLoginAlias(phone){
+function phoneLoginAlias(phone,prefix="rv-"){
  // Staff numbers are login identifiers, not verified phone ownership.
  // Example.com is reserved; no actual staff email address is needed.
- return "rv-"+phone.replace(/\D/g,"")+"@example.com";
+ return prefix+phone.replace(/\D/g,"")+"@example.com";
+}
+async function signInByPhone(phone,password){
+ // Try the newer, admin-confirmed account first, then legacy staff accounts.
+ // Never publish any specific user's phone number in this public frontend.
+ let r=await db.auth.signInWithPassword({email:phoneLoginAlias(phone,"rv2-"),password});
+ if(!r.error)return r;
+ // Do not retry rate limits or operational failures.
+ if(r.error.status===429 || (r.error.code && r.error.code!=="invalid_credentials"))return r;
+ return await db.auth.signInWithPassword({email:phoneLoginAlias(phone),password});
 }
 async function auth(signup){
  const password=el("pass").value;
@@ -274,7 +283,7 @@ async function auth(signup){
  if(loginMode==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){authMessage("ایمیل معتبر وارد کن.",true);return;}
  el("loginBtn").disabled=true;el("signupBtn").disabled=true;
  try{
-  const r=signup?await db.auth.signUp({email,password}):await db.auth.signInWithPassword(loginMode==="phone"?{email:phoneLoginAlias(phone),password}:{email,password});
+  const r=signup?await db.auth.signUp({email,password}):loginMode==="phone"?await signInByPhone(phone,password):await db.auth.signInWithPassword({email,password});
   if(r.error)throw r.error;
   if(signup&&!r.data.session){authMessage("ثبت اولیه انجام شد. لینک تأیید ایمیل را باز کن؛ سپس وارد شو.");return;}
   session=r.data.session;await prepare();
