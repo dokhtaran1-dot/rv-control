@@ -91,7 +91,7 @@ window.supabase={createClient:(base,key)=>{
 <header class="head"><div class="brand"><div class="mark">RV</div><div><div class="eng">RV CONTROL</div><div class="tiny">LE ROYAL VILLAGE CAFÉ · STAFF MANAGEMENT</div></div></div><div class="subtitle">سامانه خصوصی مدیریت و نظارت رویال ویلیج کافه</div></header>
 <main class="wrap">
 <div id="loading" class="card muted">در حال اتصال امن به سامانه…</div>
-<section id="auth" class="hide"><div class="card" style="max-width:450px;margin:25px auto"><h2>ورود امن مدیریت RV و حقوق رویال مال</h2><p class="muted">ورود فقط برای حساب‌های مجاز رستوران یا پنل مستقل حقوق رویال مال فعال است.</p><div class="input-row" style="margin-top:12px"><button id="phoneMode" class="block">موبایل و رمز</button><button id="emailMode" class="outline block">ایمیل قبلی</button></div><div id="phoneField" class="field"><label for="phone">شماره موبایل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="09123456789 یا +994..." dir="ltr"></div><div id="emailField" class="field hide"><label for="email">ایمیل</label><input id="email" type="email" placeholder="name@example.com" autocomplete="email" dir="ltr"></div><div class="field"><label for="pass">رمز عبور</label><input id="pass" type="password" autocomplete="current-password" placeholder="حداقل ۸ کاراکتر" dir="ltr"></div><button id="loginBtn" class="block">ورود</button><button id="signupBtn" class="outline block hide">ثبت‌نام اولیه با ایمیل</button><div id="authMsg" class="info hide"></div><p class="muted mini" id="authHelp">ورود با شماره به‌عنوان شناسه و رمز عبور است؛ پیامک و تأیید مالکیت شماره ندارد. حساب باید قبلاً توسط مدیر ساخته شده باشد؛ ثبت‌نام به‌تنهایی دسترسی نمی‌دهد.</p></div></section>
+<section id="auth" class="hide"><div class="card" style="max-width:450px;margin:25px auto"><h2>ورود امن مدیریت RV و حقوق رویال مال</h2><p class="muted">ورود برای حساب‌های مجاز مدیریت و مشاهده فیش حقوقی اختصاصی کارکنان است.</p><div class="input-row" style="margin-top:12px"><button id="phoneMode" class="block">موبایل و رمز</button><button id="emailMode" class="outline block">ایمیل / ثبت‌نام کارمند</button></div><div id="phoneField" class="field"><label for="phone">شماره موبایل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="09123456789 یا +994..." dir="ltr"></div><div id="emailField" class="field hide"><label for="email">ایمیل</label><input id="email" type="email" placeholder="name@example.com" autocomplete="email" dir="ltr"></div><div class="field"><label for="pass">رمز عبور</label><input id="pass" type="password" autocomplete="current-password" placeholder="حداقل ۸ کاراکتر" dir="ltr"></div><button id="loginBtn" class="block">ورود</button><button id="signupBtn" class="outline block hide">ثبت‌نام کارمند با ایمیل واقعی</button><div id="authMsg" class="info hide"></div><p class="muted mini" id="authHelp">ورود با شماره به‌عنوان شناسه و رمز عبور است؛ پیامک و تأیید مالکیت شماره ندارد. حساب باید قبلاً توسط مدیر ساخته شده باشد؛ ثبت‌نام به‌تنهایی دسترسی نمی‌دهد.</p></div></section>
 <section id="pending" class="hide"><div class="card"><h2>حساب شما هنوز مجوز ندارد</h2><p>ورود موفق بود؛ اما این حساب هنوز به فهرست مجاز RV CONTROL متصل نشده است.</p><div class="info">برای فعال شدن پنل مالک یا حساب کارکنان، مدیر سامانه باید نقش را در پایگاه داده تأیید کند.</div><button id="pendingLogout" class="outline block">خروج</button></div></section>
 <section id="app" class="hide">
 <div class="card" style="padding:12px 16px"><div class="row"><div><b id="userName">کاربر</b><div id="roleText" class="muted"></div></div><button class="outline action" id="logout">خروج</button></div></div>
@@ -104,6 +104,7 @@ window.supabase={createClient:(base,key)=>{
 <button data-tab="people" id="nav-people">پرسنل</button>
 <button data-tab="payroll" id="nav-payroll">حقوق رستوران</button>
 <button data-tab="mall-payroll" id="nav-mall-payroll" class="hide">حقوق رویال مال</button>
+<button data-tab="my-payroll" id="nav-my-payroll" class="hide">فیش حقوقی من</button>
 <button data-tab="shifts" id="nav-shifts">شیفت‌ها</button>
 <button data-tab="finance" id="nav-finance">مالی روزانه</button>
 <button data-tab="inventory" id="nav-inventory">انبار</button>
@@ -169,6 +170,13 @@ window.supabase={createClient:(base,key)=>{
 <div class="field"><label>مقدار</label><input id="moveQty" type="number" min=".001" step=".001"></div><div class="field"><label>توضیح/فاکتور</label><textarea id="moveNote" rows="2" maxlength="700"></textarea></div>
 <button id="saveMove" class="block">ثبت گردش انبار</button></div>
 <div class="card"><h2>آخرین گردش کالا</h2><div id="inventoryMoves"></div></div></section>
+<section id="view-my-payroll" class="hide">
+<div class="card"><h2>فیش حقوقی من · رویال مال</h2>
+<p class="muted">این صفحه شخصی است. فقط حقوق تأییدشده خودتان نمایش داده می‌شود و اطلاعات حقوق سایر کارکنان در دسترس نیست.</p>
+<button class="outline block" id="my-payroll-refresh">به‌روزرسانی فیش من</button>
+<p id="my-payroll-info" class="info">در حال دریافت فیش شخصی...</p></div>
+<div id="my-payroll-list"></div>
+</section>
 <section id="view-mall-payroll" class="hide">
 <div class="card"><h2>حقوق کارکنان مجتمع رویال مال تبریز</h2>
 <p class="muted">این پرونده فقط مخصوص کارکنان خود پاساژ است و با حقوق رستوران جداست. گزارش ۱۱ نفرهٔ قبلی، بنا بر تأیید مالک، مربوط به دوره ۲ تا ۵ آبان ۱۴۰۵ است؛ عنوان ماهانهٔ سند اولیه در سابقه محفوظ مانده و مبالغ دوره بدون تغییر ثبت شده‌اند.</p>
@@ -191,7 +199,17 @@ window.supabase={createClient:(base,key)=>{
 <div class="card"><div class="row"><h2 style="margin:0">فهرست حقوق پاساژ</h2></div>
 <div class="field"><label>جست‌وجوی نام، سمت یا واحد</label><input id="mall-search" placeholder="جست‌وجوی پرسنل رویال مال"></div>
 <p class="muted mini">برای هر نفر حقوق پایه، پاداش، کسورات، خالص محاسباتی و وضعیت تأیید یا پرداخت ثبت می‌شود. «ثبت پرداخت» تنها وضعیت پرونده را تغییر می‌دهد و انتقال وجه بانکی نیست.</p>
-<div id="mall-roster"></div></div></section>
+<div id="mall-roster"></div></div>
+<div id="mall-employee-links-card" class="card hide">
+<h2>فعال‌سازی فیش حقوقی کارکنان پاساژ</h2>
+<p class="muted">هر کارمند در همین برنامه از قسمت «ایمیل» با ایمیل واقعی و رمز خودش ثبت‌نام می‌کند و ایمیلش را تأیید می‌کند. سپس شما حساب تأییدشده را به پرونده همان شخص وصل می‌کنید. این دسترسی فقط برای فیش شخصی است و حقوق دیگران را نشان نمی‌دهد.</p>
+<div class="field"><label>پرونده کارمند</label><select id="mall-link-person"></select></div>
+<div class="field"><label>ایمیل تأییدشده همان کارمند</label><input id="mall-link-email" type="email" autocomplete="off" dir="ltr" placeholder="employee@example.org"></div>
+<button class="block" id="mall-link-save">فعال‌سازی فیش این کارمند</button>
+<p class="muted mini" id="mall-link-info"></p>
+<div class="row"><h3>حساب‌های متصل</h3><button class="outline action" id="mall-link-refresh">تازه‌سازی</button></div>
+<div id="mall-links-list"></div>
+</div></section>
 <section id="view-accounts" class="hide"><div id="accountsAdmin">
 <div class="card"><h2>حساب‌های اختصاصی کارکنان</h2><p class="muted">ایجاد حساب جدید با شناسه داخلی و رمز قوی در Authentication → Users پروژه RV-CONTROL انجام می‌شود. حساب باید تأییدشده باشد؛ سپس مالک در همین صفحه دسترسی را تخصیص می‌دهد. شماره موبایل در این شیوه با پیامک راستی‌آزمایی نمی‌شود.</p>
 <p class="muted mini">قالب شناسه داخلی برای شماره ایران: rv-989xxxxxxxxx@example.com ؛ هیچ رمز عبوری در GitHub ذخیره نمی‌شود.</p>
@@ -208,7 +226,7 @@ window.supabase={createClient:(base,key)=>{
 const PROJECT="https://wtwbemwyntvocdilaukk.supabase.co";
 const KEY="sb_publishable_7bhOR_5xd4ByIpOWM0jrWg_VMHNVUkH";
 const el=id=>document.getElementById(id);
-let db=null,role=null,tab="dashboard",session=null,qrToken=null,qrTimer=null,requests=[],staff=[],loginMode="phone";
+let db=null,role=null,employeePayrollRole=null,tab="dashboard",session=null,qrToken=null,qrTimer=null,requests=[],staff=[],loginMode="phone";
 const roles={owner:"مالک",executive:"مدیر ارشد",manager:"مدیر اجرایی",chef:"سرآشپز",stock:"انبار",procurement:"خرید",cashier:"صندوق",accountant:"حسابدار",auditor:"حسابرس",staff:"کارمند",kiosk:"دستگاه QR"};
 const statLabel={requested:"درخواست",stock_checked:"کنترل انبار",approved:"تأیید خرید",purchased:"خریداری شد",received:"تحویل انبار",accounted:"ثبت مالی",audited:"حسابرسی شد",rejected:"رد شد"};
 const stageNext={requested:"stock_checked",stock_checked:"approved",approved:"purchased",purchased:"received",received:"accounted",accounted:"audited"};
@@ -235,6 +253,7 @@ async function begin(){
  el("staffSearch").oninput=renderStaff;el("staffStatus").onchange=renderStaff;
  window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();
  el("refreshPresence").onclick=loadPresence;
+ el("my-payroll-refresh").onclick=loadMyPayroll;
  const r=await db.auth.getSession();session=r.data.session;
  if(session)await prepare();else show("auth");
  setInterval(async()=>{if(session&&role&&["owner","executive","manager","auditor"].includes(role)&&tab==="dashboard")await loadDashboard(false);},20000);
@@ -248,7 +267,7 @@ function setLoginMode(mode){
  el("phoneMode").classList.toggle("outline",mode!=="phone");
  el("emailMode").classList.toggle("outline",mode!=="email");
  el("authHelp").textContent=mode==="phone"?
-  "ورود رایگان با شماره به‌عنوان شناسه و رمز عبور انجام می‌شود؛ شماره با پیامک تأیید نمی‌شود. مدیر باید ابتدا حساب را در RV CONTROL بسازد.":"برای حفظ ورود حساب قبلی، ایمیل موقتاً فعال است.";
+  "ورود رایگان با شماره به‌عنوان شناسه و رمز عبور انجام می‌شود؛ شماره با پیامک تأیید نمی‌شود. مدیر باید ابتدا حساب را در RV CONTROL بسازد.":"کارکنان می‌توانند با ایمیل واقعی ثبت‌نام کنند و لینک تأیید را باز کنند. نمایش فیش فقط بعد از اتصال حساب توسط مالک فعال می‌شود.";
  el("authMsg").classList.add("hide");
 }
 function normalizePhone(raw){
@@ -294,7 +313,9 @@ async function prepare(){
  try{
   role=await rpc("rvctl_current_role");
   await window.MallPayroll?.authorize?.();
-  if(!role&&!window.MallPayroll?.enabled?.()){show("pending");return;}
+  employeePayrollRole=null;
+  try{employeePayrollRole=await rpc("rvmall_payroll_employee_role");}catch(_){}
+  if(!role&&!window.MallPayroll?.enabled?.()&&employeePayrollRole!=="mall_employee"){show("pending");return;}
   const u=await db.auth.getUser();
   let accountLabel=u.data.user?.phone||u.data.user?.email||"کاربر";
   let accountTitle="";
@@ -304,7 +325,7 @@ async function prepare(){
    if(identity?.title)accountTitle=identity.title;
   }catch(_){/* Keep existing login fallback for accounts without a display profile. */}
   el("userName").textContent=accountLabel;
-  el("roleText").textContent=(accountTitle?accountTitle+" · ":"")+(role?"سطح دسترسی RV: "+(roles[role]||role):"دسترسی اختصاصی حقوق رویال مال");
+  el("roleText").textContent=(accountTitle?accountTitle+" · ":"")+(role?"سطح دسترسی RV: "+(roles[role]||role):window.MallPayroll?.enabled?.()?"دسترسی اختصاصی حقوق رویال مال":"فیش حقوقی شخصی رویال مال");
   show("app");
   el("nav-dashboard").classList.toggle("hide",!["owner","executive","manager","auditor"].includes(role));
   el("nav-presence").classList.toggle("hide",!["owner","executive","manager","auditor"].includes(role));
@@ -318,18 +339,24 @@ async function prepare(){
   el("nav-inventory").classList.toggle("hide",!["owner","executive","manager","stock","procurement","chef","accountant","auditor"].includes(role));
   el("nav-accounts").classList.toggle("hide",role!=="owner");
   window.RVCTRLModules?.onRole?.(role);
-  if(!role)document.querySelectorAll("[data-tab]").forEach(b=>{if(b.dataset.tab!=="mall-payroll")b.classList.add("hide");});
-  if(!role){nav("mall-payroll");return;}
+  el("nav-my-payroll").classList.toggle("hide",employeePayrollRole!=="mall_employee");
+  if(!role){
+   const onlyEmployee=employeePayrollRole==="mall_employee"&&!window.MallPayroll?.enabled?.();
+   document.querySelectorAll("[data-tab]").forEach(b=>{if(b.dataset.tab!==(onlyEmployee?"my-payroll":"mall-payroll"))b.classList.add("hide");});
+   nav(onlyEmployee?"my-payroll":"mall-payroll");
+   return;
+  }
   const hash=location.hash;
   if(hash.startsWith("#scan=")){qrToken=hash.slice(6);nav("attendance");el("scanNotice").textContent="QR اسکن شد. برای ثبت رویداد از دکمه زیر استفاده کن.";el("scanButton").disabled=false;}
   else nav(["owner","executive","manager","auditor"].includes(role)?"dashboard":role==="kiosk"?"kiosk":"attendance");
  }catch(e){show("pending");}
 }
-async function logout(){await db.auth.signOut();session=null;role=null;qrToken=null;window.MallPayroll?.reset?.();show("auth");}
+async function logout(){await db.auth.signOut();session=null;role=null;employeePayrollRole=null;qrToken=null;window.MallPayroll?.reset?.();el("nav-my-payroll").classList.add("hide");show("auth");}
 function nav(next){
+ if(next==="my-payroll"&&employeePayrollRole!=="mall_employee")return;
  tab=next;el("flash").classList.add("hide");
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===next));
- ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
+ ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","my-payroll","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
  if(next==="dashboard")loadDashboard(true);
  if(next==="presence")loadPresence();
  if(next==="requests")loadRequests();
@@ -338,6 +365,28 @@ function nav(next){
  if(next==="kiosk"&&!qrToken)issueQR();
  window.RVCTRLModules?.loadTab?.(next);
  if(next==="mall-payroll")window.MallPayroll?.load?.();
+ if(next==="my-payroll")loadMyPayroll();
+}
+async function loadMyPayroll(){
+ const info=el("my-payroll-info"), list=el("my-payroll-list");
+ if(employeePayrollRole!=="mall_employee"){info.textContent="دسترسی فیش شخصی فعال نیست.";list.textContent="";return;}
+ info.textContent="در حال بررسی فیش‌های اختصاصی شما...";list.textContent="";
+ try{
+  const d=await rpc("rvmall_payroll_my_slips");
+  const rows=Array.isArray(d.records)?d.records:[];
+  info.textContent="نام کارمند: "+(d.full_name||"—")+" · فقط دوره‌های تأییدشده نمایش داده می‌شود.";
+  list.innerHTML=rows.map(x=>{
+   const num=v=>Number(v).toLocaleString("fa-IR")+" تومان";
+   const paid=x.status==="paid";
+   const label=paid?"پرداخت‌شده (ثبت در سامانه)":"تأییدشده · پرداخت هنوز ثبت نشده";
+   const when=paid&&x.paid_at?'<div class="mini muted">تاریخ ثبت پرداخت: '+safe(pretty(x.paid_at))+'</div>':"";
+   return '<div class="card"><div class="row"><b>'+safe(x.period_label||x.month_start)+'</b><span class="tag">'+safe(label)+'</span></div>'+
+    '<div class="grid"><div><div class="mini muted">حقوق پایه</div><b>'+num(x.base_toman)+'</b></div>'+
+    '<div><div class="mini muted">پاداش</div><b>'+num(x.bonus_toman)+'</b></div>'+
+    '<div><div class="mini muted">کسورات</div><b>'+num(x.deduction_toman)+'</b></div>'+
+    '<div><div class="mini muted">خالص ثبت‌شده</div><b>'+num(x.net_toman)+'</b></div></div>'+when+'</div>';
+  }).join("")||'<div class="card">هنوز فیش تأییدشده‌ای برای حساب شما منتشر نشده است.</div>';
+ }catch(e){info.textContent="امکان دریافت فیش: "+e.message;list.textContent=""; }
 }
 async function loadDashboard(noisy){
  try{
