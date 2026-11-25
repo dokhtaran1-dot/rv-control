@@ -286,8 +286,16 @@ async function prepare(){
   role=await rpc("rvctl_current_role");
   await window.MallPayroll?.authorize?.();
   if(!role&&!window.MallPayroll?.enabled?.()){show("pending");return;}
-  const u=await db.auth.getUser();el("userName").textContent=u.data.user?.phone||u.data.user?.email||"کاربر";
-  el("roleText").textContent=role?"سطح دسترسی RV: "+(roles[role]||role):"دسترسی اختصاصی حقوق رویال مال";
+  const u=await db.auth.getUser();
+  let accountLabel=u.data.user?.phone||u.data.user?.email||"کاربر";
+  let accountTitle="";
+  try{
+   const identity=await rpc("rvctl_my_display_identity");
+   if(identity?.display_name)accountLabel=identity.display_name;
+   if(identity?.title)accountTitle=identity.title;
+  }catch(_){/* Keep existing login fallback for accounts without a display profile. */}
+  el("userName").textContent=accountLabel;
+  el("roleText").textContent=(accountTitle?accountTitle+" · ":"")+(role?"سطح دسترسی RV: "+(roles[role]||role):"دسترسی اختصاصی حقوق رویال مال");
   show("app");
   el("nav-dashboard").classList.toggle("hide",!["owner","executive","manager","auditor"].includes(role));
   el("nav-presence").classList.toggle("hide",!["owner","executive","manager","auditor"].includes(role));
