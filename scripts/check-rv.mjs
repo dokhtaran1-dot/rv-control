@@ -56,7 +56,9 @@ test("Separate Mall payroll authorization",()=>{
   assert.ok(!mall.includes("rvctl_staff"));
 });
 test("Mobile alias login and protected workflow",()=>{
+  assert.ok(html.includes("phoneLoginAlias(phone,\"rv2-\")"));
   assert.ok(html.includes("phoneLoginAlias(phone),password"));
+  assert.ok(html.includes("signInByPhone(phone,password)"));
   assert.ok(html.includes("rvctl_current_role"));
   assert.ok(modules.includes("rvctl_report_summary"));
   assert.ok(modules.includes("rvctl_shift_list"));
