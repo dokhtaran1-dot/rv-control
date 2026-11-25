@@ -4,6 +4,7 @@ import vm from "node:vm";
 
 const html = fs.readFileSync("index.html","utf8");
 const modules = fs.readFileSync("rv-modules.js","utf8");
+const mall = fs.readFileSync("mall-payroll.js","utf8");
 const checks = [];
 function test(name, fn) { fn(); checks.push(name); }
 
@@ -11,6 +12,8 @@ test("Independent database only", () => {
   assert.ok(html.includes("wtwbemwyntvocdilaukk.supabase.co"));
   assert.ok(!html.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!modules.includes("jwddfcsikkialxzbrhle"));
+  assert.ok(!mall.includes("jwddfcsikkialxzbrhle"));
+  assert.ok(!mall.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!html.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!modules.includes("SUPABASE_SERVICE_ROLE_KEY"));
 });
@@ -20,14 +23,16 @@ test("JavaScript syntax", () => {
   assert.ok(inline.length>=2);
   for(const script of inline)new vm.Script(script,{filename:"index.html inline"});
   new vm.Script(modules,{filename:"rv-modules.js"});
+  new vm.Script(mall,{filename:"mall-payroll.js"});
 });
 test("Module deployed as separate script", () => {
   assert.ok(html.includes('<script src="./rv-modules.js" defer></script>'));
+  assert.ok(html.includes('<script src="./mall-payroll.js" defer></script>'));
   assert.ok(html.includes("window.RVCTRLModules?.attach?.()"));
 });
 test("Tab panels", () => {
   for(const t of ["dashboard","presence","attendance","kiosk","requests","people",
-                  "payroll","shifts","finance","inventory","accounts"]){
+                  "payroll","mall-payroll","shifts","finance","inventory","accounts"]){
     assert.ok(html.includes('data-tab="'+t+'"'),"missing tab "+t);
     assert.ok(html.includes('id="view-'+t+'"'),"missing panel "+t);
   }
@@ -35,11 +40,20 @@ test("Tab panels", () => {
 test("Referenced DOM elements exist", () => {
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
   assert.equal(ids.length,new Set(ids).size,"duplicate HTML id");
-  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
+  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g),...mall.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
   for(const e of expected)assert.ok(ids.includes(e),"missing module HTML id "+e);
 });
 test("No accidental HTML section truncation",()=>{
   assert.equal((html.match(/<section\b/g)||[]).length,(html.match(/<\/section>/g)||[]).length);
+});
+test("Separate Mall payroll authorization",()=>{
+  assert.ok(html.includes('id="nav-mall-payroll" class="hide"'));
+  assert.ok(html.includes("await window.MallPayroll?.authorize?.()"));
+  assert.ok(html.includes("nav(\"mall-payroll\")"));
+  assert.ok(mall.includes("rvmall_payroll_role"));
+  assert.ok(mall.includes("rvmall_payroll_list"));
+  assert.ok(!mall.includes("rvctl_payroll"));
+  assert.ok(!mall.includes("rvctl_staff"));
 });
 test("Mobile alias login and protected workflow",()=>{
   assert.ok(html.includes("phoneLoginAlias(phone),password"));
