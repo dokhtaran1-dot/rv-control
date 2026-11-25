@@ -6,7 +6,7 @@ const E=id=>document.getElementById(id);
 const S=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const T=x=>Number(x||0).toLocaleString("fa-IR");
 const api=()=>window.RVCTRL;
-let role=null,records=[],month="";
+let role=null,records=[],month="",employeeLinks=[];
 function setInfo(message,error=false){const x=E("mall-payroll-info");x.textContent=message;x.classList.toggle("err",error);}
 function errorText(e){return String(e?.message||"ارتباط با سامانه برقرار نشد.");}
 function notify(txt,bad=false){api()?.msg(txt,bad);}
@@ -27,9 +27,10 @@ async function authorize(){
  }catch(e){role=null;}
  E("nav-mall-payroll").classList.toggle("hide",!enabled());
  E("mall-add-person-card").classList.toggle("hide",!isOwner());
+ E("mall-employee-links-card").classList.toggle("hide",!isOwner());
  E("mall-user-role").textContent=enabled()?(isOwner()?"مجوز ویژه مالک رویال مال":"مجوز اختصاصی امور مالی رویال مال"):"دسترسی اختصاصی فعال نیست";
 }
-function reset(){role=null;records=[];E("nav-mall-payroll").classList.add("hide");}
+function reset(){role=null;records=[];employeeLinks=[];E("nav-mall-payroll").classList.add("hide");E("mall-employee-links-card").classList.add("hide");E("mall-links-list").textContent="";}
 async function load(){
  if(!enabled()){setInfo("اجازه مشاهده حقوق رویال مال برای این حساب صادر نشده است.",true);return;}
  if(!E("mall-month").value)E("mall-month").value=iranToday().slice(0,7);
@@ -39,6 +40,7 @@ async function load(){
    const d=await api().rpc("rvmall_payroll_list",{p_month:month});
    records=Array.isArray(d.records)?d.records:[];
    render();
+   if(isOwner())await loadEmployeeLinks();
    const corrected=records.filter(x=>x.period_label).map(x=>x.period_label);
    const uniquePeriods=[...new Set(corrected)];
    const periodInfo=uniquePeriods.length===1?"بازه ثبت‌شده: "+uniquePeriods[0]+" (نه حقوق کل ماه). ":"";
@@ -59,6 +61,9 @@ function render(){
  E("mall-base").textContent=T(base)+" تومان";
  E("mall-net").textContent=allAdjustmentsKnown?T(base+bonus-deduct)+" تومان":"نامشخص";
  const state={draft:"پیش‌نویس",approved:"تأیید مالک",paid:"پرداخت‌شده (ثبت سیستمی)",not_entered:"ثبت‌نشده"};
+ const select=E("mall-link-person"),prev=select.value;
+ select.innerHTML='<option value="">انتخاب کارمند</option>'+records.filter(x=>x.active).map(x=>'<option value="'+S(x.id)+'">'+S(x.full_name)+'</option>').join("");
+ if(records.some(x=>x.id===prev&&x.active))select.value=prev;
  E("mall-roster").innerHTML=visible.map(x=>{
    const hasPay=x.base_toman!==null&&x.base_toman!==undefined;
    const allKnown=hasPay&&x.bonus_toman!==null&&x.bonus_toman!==undefined&&x.deduction_toman!==null&&x.deduction_toman!==undefined;
@@ -136,11 +141,63 @@ async function savePerson(){
  }catch(e){notify(errorText(e),true);}
  finally{b.disabled=false;}
 }
+async function loadEmployeeLinks(){
+ if(!isOwner())return;
+ const info=E("mall-link-info");
+ info.textContent="در حال دریافت حساب‌های متصل...";
+ try{
+  const data=await api().rpc("rvmall_payroll_employee_links_list");
+  employeeLinks=Array.isArray(data)?data:[];
+  renderEmployeeLinks();
+  info.textContent="حساب کارمند فقط پس از ثبت‌نام و تأیید ایمیل واقعی فعال می‌شود.";
+ }catch(e){info.textContent="دریافت حساب‌های متصل ناموفق بود: "+errorText(e);}
+}
+function renderEmployeeLinks(){
+ const names=new Map(records.map(x=>[x.id,x.full_name]));
+ E("mall-links-list").innerHTML=employeeLinks.map(x=>
+  '<div class="row" style="margin:8px 0;gap:10px"><div><b>'+S(names.get(x.person_id)||"کارمند")+'</b><div class="mini muted" dir="ltr">'+S(x.email||"")+'</div><div class="mini muted">'+(x.enabled?"فعال":"غیرفعال")+'</div></div>'+
+  (x.enabled?'<button class="outline action" data-mall-unlink="'+S(x.person_id)+'">قطع دسترسی</button>':"")+'</div>'
+ ).join("")||'<p class="muted mini">هنوز حساب کارمندی متصل نشده است.</p>';
+ E("mall-links-list").querySelectorAll("[data-mall-unlink]").forEach(b=>b.addEventListener("click",()=>unlinkEmployee(b.dataset.mallUnlink)));
+}
+async function linkEmployee(){
+ if(!isOwner())return;
+ const personId=E("mall-link-person").value;
+ const email=E("mall-link-email").value.trim().toLowerCase();
+ const person=records.find(x=>x.id===personId&&x.active);
+ const info=E("mall-link-info"),button=E("mall-link-save");
+ if(!person){info.textContent="پرونده کارمند را انتخاب کنید.";return;}
+ if(email.length<6||!email.includes("@")||!email.split("@")[1]?.includes(".")||email.endsWith("@example.com")){
+  info.textContent="ایمیل واقعی و قابل دسترس کارمند را وارد کنید.";return;
+ }
+ if(!confirm("حساب تأییدشده «"+email+"» فقط به فیش حقوقی «"+person.full_name+"» متصل شود؟"))return;
+ button.disabled=true;info.textContent="در حال فعال‌سازی فیش شخصی...";
+ try{
+  await api().rpc("rvmall_payroll_employee_link",{p_person_id:personId,p_email:email});
+  E("mall-link-email").value="";
+  await loadEmployeeLinks();
+  info.textContent="حساب کارمند به پرونده حقوقی خودش متصل شد.";
+ }catch(e){info.textContent="اتصال انجام نشد: "+errorText(e);}
+ finally{button.disabled=false;}
+}
+async function unlinkEmployee(personId){
+ if(!isOwner())return;
+ const person=records.find(x=>x.id===personId);
+ if(!confirm("دسترسی فیش شخصی «"+(person?.full_name||"این کارمند")+"» قطع شود؟ اطلاعات حقوق حذف نمی‌شود."))return;
+ const info=E("mall-link-info");
+ try{
+  await api().rpc("rvmall_payroll_employee_unlink",{p_person_id:personId});
+  await loadEmployeeLinks();
+  info.textContent="دسترسی فیش این کارمند قطع شد؛ پرونده حقوق محفوظ است.";
+ }catch(e){info.textContent="قطع دسترسی انجام نشد: "+errorText(e);}
+}
 function setup(){
  E("mall-month").value=(iranToday().slice(0,7)==="2026-11"?"2026-10":iranToday().slice(0,7));
  E("mall-month").addEventListener("change",()=>{if(enabled())load();});
  E("mall-search").addEventListener("input",render);
  E("mall-refresh").addEventListener("click",load);
+ E("mall-link-save").addEventListener("click",linkEmployee);
+ E("mall-link-refresh").addEventListener("click",loadEmployeeLinks);
  E("mall-save-person").addEventListener("click",savePerson);
  E("mall-reset-person").addEventListener("click",()=>{
  E("mall-person-id").value="";E("mall-name").value="";E("mall-position").value="";E("mall-unit").value="";E("mall-active").checked=true;
