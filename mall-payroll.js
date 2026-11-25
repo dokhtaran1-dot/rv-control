@@ -39,7 +39,10 @@ async function load(){
    const d=await api().rpc("rvmall_payroll_list",{p_month:month});
    records=Array.isArray(d.records)?d.records:[];
    render();
-   setInfo("اطلاعات حقوق پاساژ از پرونده مالی رستوران جداست. مقادیر خالی، حقوق صفر نیستند.");
+   const corrected=records.filter(x=>x.period_label).map(x=>x.period_label);
+   const uniquePeriods=[...new Set(corrected)];
+   const periodInfo=uniquePeriods.length===1?"بازه ثبت‌شده: "+uniquePeriods[0]+" (نه حقوق کل ماه). ":"";
+   setInfo(periodInfo+"اطلاعات پاساژ از رستوران جداست. مقادیر خالی، صفر نیستند.");
  }catch(e){setInfo("خطای دریافت حقوق پاساژ: "+errorText(e),true);}
 }
 function render(){
@@ -61,9 +64,10 @@ function render(){
    const allKnown=hasPay&&x.bonus_toman!==null&&x.bonus_toman!==undefined&&x.deduction_toman!==null&&x.deduction_toman!==undefined;
    const net=allKnown?Number(x.base_toman)+Number(x.bonus_toman)-Number(x.deduction_toman):null;
    const locked=x.status==="paid";
+   const period=x.period_label?'<div class="mini"><b>دوره: '+S(x.period_label)+'</b> · نه کل ماه</div>':"";
    const status=state[x.status]||"ثبت‌نشده";
    return '<div class="card" style="margin-bottom:12px">'+
-    '<div class="row"><div><b>'+S(x.full_name)+'</b><div class="mini muted">'+S(x.position_title)+' · '+S(x.unit_name)+' · '+(x.active?"فعال":"غیرفعال")+'</div></div><span class="tag">'+S(status)+'</span></div>'+
+    '<div class="row"><div><b>'+S(x.full_name)+'</b><div class="mini muted">'+S(x.position_title)+' · '+S(x.unit_name)+' · '+(x.active?"فعال":"غیرفعال")+'</div>'+period+'</div><span class="tag">'+S(status)+'</span></div>'+
     '<div class="grid" style="margin-top:10px"><div><span class="mini muted">پایه</span><div>'+ (hasPay?T(x.base_toman)+" تومان":"تعیین نشده")+'</div></div>'+
     '<div><span class="mini muted">پاداش</span><div>'+(x.bonus_toman===null||x.bonus_toman===undefined?'نامشخص':T(x.bonus_toman)+' تومان')+'</div></div>'+
     '<div><span class="mini muted">کسورات</span><div>'+(x.deduction_toman===null||x.deduction_toman===undefined?'نامشخص':T(x.deduction_toman)+' تومان')+'</div></div>'+
@@ -133,7 +137,7 @@ async function savePerson(){
  finally{b.disabled=false;}
 }
 function setup(){
- E("mall-month").value=iranToday().slice(0,7);
+ E("mall-month").value=(iranToday().slice(0,7)==="2026-11"?"2026-10":iranToday().slice(0,7));
  E("mall-month").addEventListener("change",()=>{if(enabled())load();});
  E("mall-search").addEventListener("input",render);
  E("mall-refresh").addEventListener("click",load);
