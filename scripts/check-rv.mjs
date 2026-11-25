@@ -49,7 +49,12 @@ test("No accidental HTML section truncation",()=>{
 test("Separate Mall payroll authorization",()=>{
   assert.ok(html.includes('id="nav-mall-payroll" class="hide"'));
   assert.ok(html.includes("await window.MallPayroll?.authorize?.()"));
-  assert.ok(html.includes("nav(\"mall-payroll\")"));
+  assert.ok(html.includes('nav(onlyEmployee?"my-payroll":"mall-payroll")'));
+  assert.ok(html.includes('id="nav-my-payroll" class="hide"'));
+  assert.ok(html.includes('id="view-my-payroll"'));
+  assert.ok(mall.includes('E("mall-link-save").addEventListener("click",linkEmployee)'));
+  assert.ok(mall.includes("rvmall_payroll_employee_link"));
+  assert.ok(mall.includes("rvmall_payroll_employee_unlink"));
   assert.ok(mall.includes("rvmall_payroll_role"));
   assert.ok(mall.includes("rvmall_payroll_list"));
   assert.ok(!mall.includes("rvctl_payroll"));
