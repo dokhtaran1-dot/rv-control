@@ -48,28 +48,30 @@ function render(){
  const entered=records.filter(x=>x.base_toman!==null&&x.base_toman!==undefined);
  const active=records.filter(x=>x.active);
  const base=entered.reduce((a,x)=>a+Number(x.base_toman||0),0);
- const bonus=entered.reduce((a,x)=>a+Number(x.bonus_toman||0),0);
- const deduct=entered.reduce((a,x)=>a+Number(x.deduction_toman||0),0);
+ const allAdjustmentsKnown=entered.length>0&&entered.every(x=>x.bonus_toman!==null&&x.bonus_toman!==undefined&&x.deduction_toman!==null&&x.deduction_toman!==undefined);
+ const bonus=allAdjustmentsKnown?entered.reduce((a,x)=>a+Number(x.bonus_toman),0):null;
+ const deduct=allAdjustmentsKnown?entered.reduce((a,x)=>a+Number(x.deduction_toman),0):null;
  E("mall-count").textContent=T(active.length);
  E("mall-unentered").textContent=T(active.filter(x=>x.base_toman===null||x.base_toman===undefined).length);
  E("mall-base").textContent=T(base)+" تومان";
- E("mall-net").textContent=T(base+bonus-deduct)+" تومان";
+ E("mall-net").textContent=allAdjustmentsKnown?T(base+bonus-deduct)+" تومان":"نامشخص";
  const state={draft:"پیش‌نویس",approved:"تأیید مالک",paid:"پرداخت‌شده (ثبت سیستمی)",not_entered:"ثبت‌نشده"};
  E("mall-roster").innerHTML=visible.map(x=>{
    const hasPay=x.base_toman!==null&&x.base_toman!==undefined;
-   const net=hasPay?Number(x.base_toman)+Number(x.bonus_toman||0)-Number(x.deduction_toman||0):null;
+   const allKnown=hasPay&&x.bonus_toman!==null&&x.bonus_toman!==undefined&&x.deduction_toman!==null&&x.deduction_toman!==undefined;
+   const net=allKnown?Number(x.base_toman)+Number(x.bonus_toman)-Number(x.deduction_toman):null;
    const locked=x.status==="paid";
    const status=state[x.status]||"ثبت‌نشده";
    return '<div class="card" style="margin-bottom:12px">'+
     '<div class="row"><div><b>'+S(x.full_name)+'</b><div class="mini muted">'+S(x.position_title)+' · '+S(x.unit_name)+' · '+(x.active?"فعال":"غیرفعال")+'</div></div><span class="tag">'+S(status)+'</span></div>'+
     '<div class="grid" style="margin-top:10px"><div><span class="mini muted">پایه</span><div>'+ (hasPay?T(x.base_toman)+" تومان":"تعیین نشده")+'</div></div>'+
-    '<div><span class="mini muted">پاداش</span><div>'+T(x.bonus_toman)+' تومان</div></div>'+
-    '<div><span class="mini muted">کسورات</span><div>'+T(x.deduction_toman)+' تومان</div></div>'+
+    '<div><span class="mini muted">پاداش</span><div>'+(x.bonus_toman===null||x.bonus_toman===undefined?'نامشخص':T(x.bonus_toman)+' تومان')+'</div></div>'+
+    '<div><span class="mini muted">کسورات</span><div>'+(x.deduction_toman===null||x.deduction_toman===undefined?'نامشخص':T(x.deduction_toman)+' تومان')+'</div></div>'+
     '<div><span class="mini muted">خالص محاسباتی</span><div>'+(net===null?"نامشخص":T(net)+" تومان")+'</div></div></div>'+
     (x.note?'<p class="mini muted">'+S(x.note)+'</p>':"")+
     '<div class="row" style="margin-top:10px;justify-content:flex-start;flex-wrap:wrap">'+
     (x.active&&!locked?'<button class="outline action" data-mall-edit="'+S(x.id)+'">ثبت/اصلاح حقوق</button>':"")+
-    (isOwner()&&x.active&&x.status==="draft"&&hasPay?'<button class="action" data-mall-approve="'+S(x.id)+'">تأیید</button>':"")+
+    (isOwner()&&x.active&&x.status==="draft"&&allKnown?'<button class="action" data-mall-approve="'+S(x.id)+'">تأیید</button>':"")+
     (isOwner()&&x.active&&x.status==="approved"?'<button class="action" data-mall-paid="'+S(x.id)+'">ثبت پرداخت</button>':"")+
     (isOwner()?'<button class="outline action" data-mall-person="'+S(x.id)+'">اصلاح مشخصات</button>':"")+
     '</div></div>';
@@ -91,8 +93,8 @@ async function editSalary(id){
  const item=records.find(x=>x.id===id);if(!item||item.status==="paid")return;
  try{
   const base=promptNumber("حقوق پایه «"+item.full_name+"» به تومان:",item.base_toman);if(base===null)return;
-  const bonus=promptNumber("پاداش به تومان:",item.bonus_toman||0);if(bonus===null)return;
-  const deduction=promptNumber("کسورات به تومان:",item.deduction_toman||0);if(deduction===null)return;
+  const bonus=promptNumber("پاداش به تومان (اگر پاداشی ندارد، صفر را آگاهانه وارد کن):",item.bonus_toman);if(bonus===null)return;
+  const deduction=promptNumber("کسورات به تومان (اگر کسوراتی ندارد، صفر را آگاهانه وارد کن):",item.deduction_toman);if(deduction===null)return;
   if(deduction>base+bonus)throw Error("کسورات نمی‌تواند بیشتر از حقوق به‌علاوه پاداش باشد.");
   const note=prompt("توضیحات / مزایا (اختیاری):",item.note||"");if(note===null)return;
   if(note.length>1000)throw Error("توضیح بیش از حد طولانی است.");
