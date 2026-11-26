@@ -7,6 +7,7 @@ const modules = fs.readFileSync("rv-modules.js","utf8");
 const mall = fs.readFileSync("mall-payroll.js","utf8");
 const performance = fs.readFileSync("mall-performance.js","utf8");
 const combined = fs.readFileSync("combined-payroll.js","utf8");
+const hr = fs.readFileSync("hr-control.js","utf8");
 const workflow = fs.readFileSync(".github/workflows/deploy-pages.yml","utf8");
 const checks = [];
 function test(name, fn) { fn(); checks.push(name); }
@@ -18,9 +19,11 @@ test("Independent database only", () => {
   assert.ok(!mall.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!performance.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!combined.includes("jwddfcsikkialxzbrhle"));
+  assert.ok(!hr.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!mall.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!performance.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!combined.includes("SUPABASE_SERVICE_ROLE_KEY"));
+  assert.ok(!hr.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!html.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!modules.includes("SUPABASE_SERVICE_ROLE_KEY"));
 });
@@ -33,17 +36,19 @@ test("JavaScript syntax", () => {
   new vm.Script(mall,{filename:"mall-payroll.js"});
   new vm.Script(performance,{filename:"mall-performance.js"});
   new vm.Script(combined,{filename:"combined-payroll.js"});
+  new vm.Script(hr,{filename:"hr-control.js"});
 });
 test("Module deployed as separate script", () => {
   assert.ok(html.includes('<script src="./rv-modules.js" defer></script>'));
   assert.ok(html.includes('<script src="./mall-payroll.js" defer></script>'));
   assert.ok(html.includes('<script src="./mall-performance.js" defer></script>'));
   assert.ok(html.includes('<script src="./combined-payroll.js" defer></script>'));
+  assert.ok(html.includes('<script src="./hr-control.js" defer></script>'));
   assert.ok(html.includes("window.RVCTRLModules?.attach?.()"));
 });
 test("Tab panels", () => {
   for(const t of ["dashboard","presence","attendance","kiosk","requests","people",
-                  "payroll","mall-payroll","combined-payroll","performance","shifts","finance","inventory","accounts"]){
+                  "payroll","mall-payroll","combined-payroll","performance","hr","shifts","finance","inventory","accounts"]){
     assert.ok(html.includes('data-tab="'+t+'"'),"missing tab "+t);
     assert.ok(html.includes('id="view-'+t+'"'),"missing panel "+t);
   }
@@ -51,7 +56,7 @@ test("Tab panels", () => {
 test("Referenced DOM elements exist", () => {
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
   assert.equal(ids.length,new Set(ids).size,"duplicate HTML id");
-  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g),...mall.matchAll(/\bE\("([^"]+)"\)/g),...performance.matchAll(/\bE\("([^"]+)"\)/g),...combined.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
+  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g),...mall.matchAll(/\bE\("([^"]+)"\)/g),...performance.matchAll(/\bE\("([^"]+)"\)/g),...combined.matchAll(/\bE\("([^"]+)"\)/g),...hr.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
   for(const e of expected)assert.ok(ids.includes(e),"missing module HTML id "+e);
 });
 test("No accidental HTML section truncation",()=>{
@@ -95,6 +100,23 @@ test("Read-only owner combined payroll and complete deployment bundle",()=>{
     assert.ok(workflow.includes("test -s dist/"+file),"not bundled: "+file);
     assert.ok(workflow.includes("'"+file+"'"),"no push trigger: "+file);
   }
+});
+test("Owner HR roles, employee duties, incident review, no automatic fines",()=>{
+  assert.ok(html.includes('id="nav-hr" class="hide"'));
+  assert.ok(html.includes('id="view-hr" class="hide"'));
+  assert.ok(html.includes("await window.HRControl?.authorize?.()"));
+  assert.ok(html.includes("window.HRControl?.setup?.()"));
+  assert.ok(html.includes('if(next==="hr")window.HRControl?.load?.()'));
+  for(const x of ["hr-info","hr-unit","hr-search","hr-refresh","hr-catalog","hr-people","hr-incidents","hr-count"])
+    assert.ok(html.includes('id="'+x+'"'),"missing HR id "+x);
+  for(const fn of ["rvctl_hr_board","rvctl_hr_profile_save","rvctl_hr_incident_report","rvctl_hr_incident_reply","rvctl_hr_incident_review"])
+    assert.ok(hr.includes(fn),"missing RPC "+fn);
+  for(const dangerous of ["rvmall_payroll_decide","rvmall_payroll_record","rvctl_payroll_record"])
+    assert.ok(!hr.includes(dangerous),"unexpected payroll write "+dangerous);
+  assert.ok(!html.includes("قانون کار"));
+  assert.ok(!hr.includes("قانون کار"));
+  assert.ok(workflow.includes("test -s dist/hr-control.js"));
+  assert.ok(workflow.includes("'hr-control.js'"));
 });
 test("Mobile alias login and protected workflow",()=>{
   assert.ok(html.includes("phoneLoginAlias(phone,\"rv2-\")"));
