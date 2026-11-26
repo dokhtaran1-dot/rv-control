@@ -6,6 +6,8 @@ const html = fs.readFileSync("index.html","utf8");
 const modules = fs.readFileSync("rv-modules.js","utf8");
 const mall = fs.readFileSync("mall-payroll.js","utf8");
 const performance = fs.readFileSync("mall-performance.js","utf8");
+const combined = fs.readFileSync("combined-payroll.js","utf8");
+const workflow = fs.readFileSync(".github/workflows/deploy-pages.yml","utf8");
 const checks = [];
 function test(name, fn) { fn(); checks.push(name); }
 
@@ -15,8 +17,10 @@ test("Independent database only", () => {
   assert.ok(!modules.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!mall.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!performance.includes("jwddfcsikkialxzbrhle"));
+  assert.ok(!combined.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!mall.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!performance.includes("SUPABASE_SERVICE_ROLE_KEY"));
+  assert.ok(!combined.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!html.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!modules.includes("SUPABASE_SERVICE_ROLE_KEY"));
 });
@@ -28,16 +32,18 @@ test("JavaScript syntax", () => {
   new vm.Script(modules,{filename:"rv-modules.js"});
   new vm.Script(mall,{filename:"mall-payroll.js"});
   new vm.Script(performance,{filename:"mall-performance.js"});
+  new vm.Script(combined,{filename:"combined-payroll.js"});
 });
 test("Module deployed as separate script", () => {
   assert.ok(html.includes('<script src="./rv-modules.js" defer></script>'));
   assert.ok(html.includes('<script src="./mall-payroll.js" defer></script>'));
   assert.ok(html.includes('<script src="./mall-performance.js" defer></script>'));
+  assert.ok(html.includes('<script src="./combined-payroll.js" defer></script>'));
   assert.ok(html.includes("window.RVCTRLModules?.attach?.()"));
 });
 test("Tab panels", () => {
   for(const t of ["dashboard","presence","attendance","kiosk","requests","people",
-                  "payroll","mall-payroll","performance","shifts","finance","inventory","accounts"]){
+                  "payroll","mall-payroll","combined-payroll","performance","shifts","finance","inventory","accounts"]){
     assert.ok(html.includes('data-tab="'+t+'"'),"missing tab "+t);
     assert.ok(html.includes('id="view-'+t+'"'),"missing panel "+t);
   }
@@ -45,7 +51,7 @@ test("Tab panels", () => {
 test("Referenced DOM elements exist", () => {
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
   assert.equal(ids.length,new Set(ids).size,"duplicate HTML id");
-  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g),...mall.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
+  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g),...mall.matchAll(/\bE\("([^"]+)"\)/g),...performance.matchAll(/\bE\("([^"]+)"\)/g),...combined.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
   for(const e of expected)assert.ok(ids.includes(e),"missing module HTML id "+e);
 });
 test("No accidental HTML section truncation",()=>{
@@ -73,6 +79,22 @@ test("Separate manager scoring and owner approval workflow",()=>{
   for(const name of ["rvmall_performance_role","rvmall_performance_board","rvmall_performance_assign","rvmall_performance_score_save","rvmall_performance_review"])assert.ok(performance.includes(name));
   assert.ok(!performance.includes("rvmall_payroll_record"));
   assert.ok(!performance.includes("rvmall_payroll_decide"));
+});
+test("Read-only owner combined payroll and complete deployment bundle",()=>{
+  assert.ok(html.includes('id="nav-combined-payroll" class="hide"'));
+  assert.ok(html.includes('id="view-combined-payroll" class="hide"'));
+  assert.ok(html.includes("window.CombinedPayroll?.setup?.()"));
+  assert.ok(html.includes("await window.CombinedPayroll?.authorize?.()"));
+  assert.ok(html.includes('if(next==="combined-payroll")window.CombinedPayroll?.load?.()'));
+  assert.ok(combined.includes("rvctl_combined_payroll_board"));
+  assert.ok(combined.includes("rvmall_payroll_role"));
+  assert.ok(!combined.includes("rvmall_payroll_record"));
+  assert.ok(!combined.includes("rvmall_payroll_decide"));
+  assert.ok(!combined.includes("rvctl_payroll_record"));
+  for(const file of ["mall-payroll.js","mall-performance.js","combined-payroll.js"]){
+    assert.ok(workflow.includes("test -s dist/"+file),"not bundled: "+file);
+    assert.ok(workflow.includes("'"+file+"'"),"no push trigger: "+file);
+  }
 });
 test("Mobile alias login and protected workflow",()=>{
   assert.ok(html.includes("phoneLoginAlias(phone,\"rv2-\")"));
