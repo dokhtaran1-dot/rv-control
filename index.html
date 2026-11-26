@@ -105,6 +105,7 @@ window.supabase={createClient:(base,key)=>{
 <button data-tab="payroll" id="nav-payroll">حقوق رستوران</button>
 <button data-tab="mall-payroll" id="nav-mall-payroll" class="hide">حقوق رویال مال</button>
 <button data-tab="my-payroll" id="nav-my-payroll" class="hide">فیش حقوقی من</button>
+<button data-tab="combined-payroll" id="nav-combined-payroll" class="hide">حقوق کل RV + RM</button>
 <button data-tab="performance" id="nav-performance" class="hide">ارزیابی عملکرد</button>
 <button data-tab="shifts" id="nav-shifts">شیفت‌ها</button>
 <button data-tab="finance" id="nav-finance">مالی روزانه</button>
@@ -177,6 +178,24 @@ window.supabase={createClient:(base,key)=>{
 <button class="outline block" id="my-payroll-refresh">به‌روزرسانی فیش من</button>
 <p id="my-payroll-info" class="info">در حال دریافت فیش شخصی...</p></div>
 <div id="my-payroll-list"></div>
+</section>
+<section id="view-combined-payroll" class="hide">
+ <div class="card"><h2>گزارش یکپارچه حقوق · RV + RM</h2>
+ <p class="muted">گزارش محرمانه ویژه مالک، شامل حقوق پایه ماهانه رویال ویلیج کافه و مبالغ دوره‌ای رویال مال تبریز. پرونده‌های دو بخش مستقل و محفوظ هستند.</p>
+ <div class="field"><label>ماه پرونده رویال مال (میلادی؛ ۲ تا ۵ آبان ۱۴۰۵ در اکتبر ۲۰۲۶ است)</label><input id="combined-month" type="month" dir="ltr"></div>
+ <button class="outline block" id="combined-refresh">به‌روزرسانی گزارش کل</button>
+ <div class="grid">
+ <div class="stat"><span class="muted">RV · نفرات با حقوق مشخص</span><b id="combined-rv-count" style="font-size:18px">—</b></div>
+ <div class="stat"><span class="muted">RV · حقوق پایه ماهانه ثبت‌شده</span><b id="combined-rv-sum" style="font-size:17px">—</b></div>
+ <div class="stat"><span class="muted">RM · نفرات با حقوق ثبت‌شده</span><b id="combined-rm-count" style="font-size:18px">—</b></div>
+ <div class="stat"><span class="muted">RM · مجموع مبالغ دوره انتخابی</span><b id="combined-rm-sum" style="font-size:17px">—</b></div>
+ </div>
+ <div class="stat" style="margin-top:12px"><span class="muted">صرفاً جمع ریاضی ارقام ثبت‌شده دو بخش؛ نه حقوق کل ماه و نه مبلغ قابل پرداخت</span><b id="combined-sum" style="font-size:22px">—</b></div>
+ <p id="combined-period-note" class="info">مبالغ فقط پس از بررسی هم‌دوره بودن، قابلیت تفسیر به‌عنوان جمع حقوق ماهانه را دارند.</p>
+ <p id="combined-message" class="muted">هیچ پرداخت بانکی یا تأیید حقوق با این گزارش انجام نمی‌شود.</p>
+ </div>
+ <div class="card"><h2>جزئیات حقوق RV · ماهانه</h2><div id="combined-rv-list"></div></div>
+ <div class="card"><h2>جزئیات حقوق RM · دوره انتخابی</h2><div id="combined-rm-list"></div></div>
 </section>
 <section id="view-performance" class="hide">
  <div class="card"><h2>ارزیابی عملکرد ماهانه · رویال مال</h2>
@@ -261,7 +280,7 @@ async function begin(){
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  el("newQR").onclick=issueQR;el("scanButton").onclick=scanQR;el("makeRequest").onclick=createRequest;
  el("staffSearch").oninput=renderStaff;el("staffStatus").onchange=renderStaff;
- window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();window.MallPerformance?.setup?.();
+ window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();window.MallPerformance?.setup?.();window.CombinedPayroll?.setup?.();
  el("refreshPresence").onclick=loadPresence;
  el("my-payroll-refresh").onclick=loadMyPayroll;
  const r=await db.auth.getSession();session=r.data.session;
@@ -326,6 +345,7 @@ async function prepare(){
   employeePayrollRole=null;
   try{employeePayrollRole=await rpc("rvmall_payroll_employee_role");}catch(_){}
   await window.MallPerformance?.authorize?.();
+  await window.CombinedPayroll?.authorize?.();
   if(!role&&!window.MallPayroll?.enabled?.()&&employeePayrollRole!=="mall_employee"){show("pending");return;}
   const u=await db.auth.getUser();
   let accountLabel=u.data.user?.phone||u.data.user?.email||"کاربر";
@@ -362,13 +382,14 @@ async function prepare(){
   else nav(["owner","executive","manager","auditor"].includes(role)?"dashboard":role==="kiosk"?"kiosk":"attendance");
  }catch(e){show("pending");}
 }
-async function logout(){await db.auth.signOut();session=null;role=null;employeePayrollRole=null;qrToken=null;window.MallPayroll?.reset?.();window.MallPerformance?.reset?.();el("nav-my-payroll").classList.add("hide");show("auth");}
+async function logout(){await db.auth.signOut();session=null;role=null;employeePayrollRole=null;qrToken=null;window.MallPayroll?.reset?.();window.MallPerformance?.reset?.();window.CombinedPayroll?.reset?.();el("nav-my-payroll").classList.add("hide");show("auth");}
 function nav(next){
  if(next==="my-payroll"&&employeePayrollRole!=="mall_employee")return;
  if(next==="performance"&&!window.MallPerformance?.enabled?.())return;
+ if(next==="combined-payroll"&&!window.CombinedPayroll?.enabled?.())return;
  tab=next;el("flash").classList.add("hide");
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===next));
- ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","my-payroll","performance","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
+ ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","my-payroll","combined-payroll","performance","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
  if(next==="dashboard")loadDashboard(true);
  if(next==="presence")loadPresence();
  if(next==="requests")loadRequests();
@@ -379,6 +400,7 @@ function nav(next){
  if(next==="mall-payroll")window.MallPayroll?.load?.();
  if(next==="my-payroll")loadMyPayroll();
  if(next==="performance")window.MallPerformance?.load?.();
+ if(next==="combined-payroll")window.CombinedPayroll?.load?.();
 }
 async function loadMyPayroll(){
  const info=el("my-payroll-info"), list=el("my-payroll-list");
@@ -559,4 +581,5 @@ window.addEventListener("load",begin);
 <script src="./rv-modules.js" defer></script>
 <script src="./mall-payroll.js" defer></script>
 <script src="./mall-performance.js" defer></script>
+<script src="./combined-payroll.js" defer></script>
 </body></html>
