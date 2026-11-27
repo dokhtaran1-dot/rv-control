@@ -63,6 +63,7 @@ function renderList(){
  '" data-private-key="'+S(key(p))+'"><b>'+S(p.name)+'</b> <span class="tag">'+S(p.unit)+'</span>'+
  ' <span class="muted mini">'+S(p.role_title)+'</span>'+
  (p.unread?'<span class="tag">'+T(p.unread)+' پیام خوانده‌نشده</span>':"")+
+ (p.my_role==="owner"?'<div class="mini muted">دسترسی حساب: '+(p.access_active?"فعال":"هنوز متصل نشده")+'</div>':"")+
  '<div class="mini muted">شبا: '+S(({pending:"در انتظار تأیید",verified:"تأییدشده",rejected:"نیازمند اصلاح",not_entered:"ثبت نشده"})[p.sheba_status]||"—")+'</div></button>'
  ).join("")||'<p class="muted">موردی یافت نشد.</p>';
  E("private-copy-all").classList.toggle("hide",!(ownerRV||ownerRM));
