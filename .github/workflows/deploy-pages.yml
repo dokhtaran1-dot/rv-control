@@ -10,6 +10,9 @@ on:
       - 'mall-performance.js'
       - 'combined-payroll.js'
       - 'hr-control.js'
+      - 'rollout.js'
+      - 'rv-performance.js'
+      - 'vote.html'
       - 'scripts/check-rv.mjs'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
@@ -37,7 +40,7 @@ jobs:
       - name: Prepare complete static website
         run: |
           mkdir -p dist
-          cp index.html rv-modules.js mall-payroll.js mall-performance.js combined-payroll.js hr-control.js dist/
+          cp index.html vote.html rv-modules.js mall-payroll.js mall-performance.js combined-payroll.js hr-control.js rollout.js rv-performance.js dist/
           touch dist/.nojekyll
           test -s dist/index.html
           test -s dist/rv-modules.js
@@ -45,6 +48,9 @@ jobs:
           test -s dist/mall-performance.js
           test -s dist/combined-payroll.js
           test -s dist/hr-control.js
+          test -s dist/rollout.js
+          test -s dist/rv-performance.js
+          test -s dist/vote.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
