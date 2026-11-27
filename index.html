@@ -107,7 +107,7 @@ window.supabase={createClient:(base,key)=>{
 <button data-tab="my-payroll" id="nav-my-payroll" class="hide">فیش حقوقی من</button>
 <button data-tab="combined-payroll" id="nav-combined-payroll" class="hide">حقوق کل RV + RM</button>
 <button data-tab="performance" id="nav-performance" class="hide">ارزیابی عملکرد</button>
-<button data-tab="hr" id="nav-hr" class="hide">وظایف، سلسله‌مراتب و انضباط</button>
+<button data-tab="hr" id="nav-hr" class="hide">وظایف و انضباط RV</button>
 <button data-tab="setup" id="nav-setup" class="hide">راه‌اندازی کل مجموعه</button>
 <button data-tab="rv-performance" id="nav-rv-performance" class="hide">امتیازدهی RV</button>
 <button data-tab="my-rewards" id="nav-my-rewards" class="hide">پاداش‌ها و فیش شخصی</button>
@@ -208,9 +208,9 @@ window.supabase={createClient:(base,key)=>{
 <button class="outline block" id="setup-reload">به‌روزرسانی وضعیت همه بخش‌ها</button>
 <div id="setup-steps"></div><p class="mini muted" id="setup-message">وضعیت سامانه در حال بررسی است.</p>
 </div>
-<div class="card"><h2>۱ · تأیید چارت سازمانی و شرح وظایف</h2>
-<p class="muted">هر پرونده تا بررسی تو پیش‌نویس است. مدیر مستقیم و مرجع مرخصی را در پرونده هر نفر مشخص و تیک «تأیید مالک» را بزن. پس از تأیید پرونده RM، مسیر ارزیابی مدیر مستقیم نیز در سیستم فعال می‌شود.</p>
-<button class="outline block" id="setup-go-hr">رفتن به شرح وظایف ۳۲ نفر</button>
+<div class="card"><h2>۱ · تأیید شرح وظایف و چارت رستوران RV</h2>
+<p class="muted">این بخش فقط برای کارکنان RV است. مدیر مستقیم و مرجع مرخصی هر نفر رستوران را بررسی کن و تیک «تأیید مالک» را بزن. پرونده‌های RM و حقوق کارکنان مجتمع جدا می‌مانند.</p>
+<button class="outline block" id="setup-go-hr">رفتن به شرح وظایف ۲۱ نفر رستوران</button>
 </div>
 <div class="card"><h2>۲ · حساب کارکنان</h2>
 <p class="muted">هر کارمند باید با حساب واقعی خودش وارد شود. برای RV حساب و نقش از «حساب‌ها» تخصیص داده می‌شود. برای RM پس از تأیید ایمیل، در «حقوق رویال مال» حساب به پرونده شخصی متصل می‌شود. بدون حساب واقعی یا ایمیل تأییدشده نمی‌توان اتصال را ساخت.</p>
@@ -271,10 +271,10 @@ window.supabase={createClient:(base,key)=>{
 <div id="my-rewards-list"></div></section>
 <section id="view-hr" class="hide">
 <div class="card">
- <h2>آیین‌نامه اجرایی · وظایف، سلسله‌مراتب و انضباط RV + RM</h2>
- <p class="muted">پرونده اختصاصی هر نیروی فعال، مدیر مستقیم، مرجع مرخصی، مسیر گزارش‌دهی، شرح دقیق وظایف و گزارش‌های انضباطی. اطلاعات اولیه تا تأیید مالک، پیش‌نویس هستند. کارکنان فقط پرونده خود و مسئولان فقط افراد مستقیم زیرنظرشان را مشاهده می‌کنند.</p>
+ <h2>آیین‌نامه اجرایی · وظایف، سلسله‌مراتب و انضباط رویال ویلیج کافه RV</h2>
+ <p class="muted">این بخش فقط مخصوص کارکنان رویال ویلیج کافه (RV) است: مدیر مستقیم، مرجع مرخصی، مسیر گزارش‌دهی، شرح دقیق وظایف و گزارش‌های انضباطی. پرونده‌های رویال مال (RM) در این صفحه نمایش داده نمی‌شوند و حقوق و اطلاعات مالی آنها در بخش‌های مستقل محفوظ است.</p>
  <div class="info"><b>ضوابط گزارش انضباطی:</b> تأخیر بر اساس تعداد دقیقه واقعی ثبت می‌شود. اجرا نکردن دستور کاری مجاز در مرحله اول ۲۰۰ هزار، مرحله دوم ۱ میلیون و مرحله سوم ۵ میلیون تومان به‌عنوان مبلغ مرجع پیشنهادی برای بررسی مدیریت درج می‌شود. هر مورد مستند و دارای فرصت پاسخ کارمند است. هیچ مبلغی به‌صورت خودکار از حقوق، مزایا یا پاداش کسر نمی‌شود.</div>
- <div class="input-row"><div class="field"><label>بخش</label><select id="hr-unit"><option value="all">همه بخش‌های مجاز</option><option value="RV">رویال ویلیج کافه (RV)</option><option value="RM">رویال مال (RM)</option></select></div><div class="field"><label>نام، سمت یا مدیر مستقیم</label><input id="hr-search" placeholder="جست‌وجوی کارکنان"></div></div>
+ <div class="field"><label>جست‌وجوی نام، سمت یا مدیر مستقیم کارکنان رستوران</label><input id="hr-search" placeholder="جست‌وجوی کارکنان RV"></div>
  <div class="row"><b id="hr-count">—</b><button class="outline action" id="hr-refresh">بازخوانی پرونده‌ها</button></div>
  <div class="row" style="flex-wrap:wrap"><label><input id="hr-only-pending" type="checkbox" style="width:auto"> نمایش فقط پرونده‌های تأییدنشده</label><button id="hr-next-pending" class="outline action">بازبینی پروندهٔ بعدی</button></div>
  <p class="mini muted" id="hr-info">در حال بررسی دسترسی...</p>
