@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#103628">
+<title>Royal Village · Royal Mall | رأی مشتریان</title>
+<style>
+:root{color-scheme:dark;--bg:#081b14;--panel:#123626;--line:#3b5d46;--gold:#dfbd7e;--text:#f5f0e2}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#24563e,#081b14 65%);color:var(--text);font:15px/2 Tahoma,Arial,sans-serif;min-height:100vh}
+main{width:min(540px,calc(100% - 28px));margin:6vh auto;padding:26px;background:var(--panel);border:1px solid var(--line);border-radius:24px;box-shadow:0 20px 80px #0005}
+h1{font:700 32px/1.2 Georgia,serif;color:var(--gold);letter-spacing:.08em;margin:0}h2{font-size:20px;margin:8px 0}p{color:#d0dfd1;margin:7px 0 18px}label{display:block;margin:15px 0 5px;color:var(--gold)}
+input,select,button{width:100%;border-radius:12px;padding:13px;font:inherit;border:1px solid var(--line)}
+input,select{background:#0a2519;color:var(--text)}button{background:var(--gold);color:#14291c;font-weight:700;border:0;cursor:pointer;margin-top:20px}button:disabled{opacity:.45;cursor:not-allowed}
+small{display:block;color:#b8ceb8;margin-top:20px}.info{background:#214a35;padding:12px;margin-top:16px;border-radius:12px;color:#f5e5bf}.bad{color:#ffc1b8}a{color:var(--gold)}
+</style>
+</head>
+<body>
+<main>
+<h1>ROYAL</h1><h2>انتخاب کارمند برتر ماه</h2>
+<p>از همراهی شما سپاسگزاریم. با کد یک‌بارمصرفی که از مجموعه دریافت کرده‌اید، فقط به یک نفر رأی دهید.</p>
+<label for="unit">مجموعه</label>
+<select id="unit"><option value="RV">رویال ویلیج کافه · RV</option><option value="RM">رویال مال تبریز · RM</option></select>
+<div class="info" id="status">در حال بررسی دوره رأی‌گیری...</div>
+<label for="candidate">نام کارمند</label><select id="candidate" disabled><option value="">نامزدها در حال بارگذاری‌اند</option></select>
+<label for="code">کد رأی یک‌بارمصرف (۲۴ حرف یا رقم)</label>
+<input id="code" placeholder="XXXXXXXX..." dir="ltr" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false">
+<button id="send" disabled>ثبت رأی</button>
+<small>هر کد فقط یک‌بار پذیرفته می‌شود. انتخاب برنده پس از پایان دوره و شمارش رأی‌های معتبر انجام می‌شود. این صفحه به اطلاعات حقوق یا حساب کاربری کارکنان دسترسی ندارد.</small>
+<p style="text-align:center;margin-top:20px"><a href="./">بازگشت به RV CONTROL</a></p>
+</main>
+<script>
+(function(){
+"use strict";
+const BASE="https://wtwbemwyntvocdilaukk.supabase.co";
+const KEY="sb_publishable_7bhOR_5xd4ByIpOWM0jrWg_VMHNVUkH";
+const E=id=>document.getElementById(id);
+let active=false;
+async function rpc(name,args={}){
+ const r=await fetch(BASE+"/rest/v1/rpc/"+encodeURIComponent(name),{
+  method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},
+  body:JSON.stringify(args),cache:"no-store"
+ });
+ const t=await r.text();let d=null;try{d=t?JSON.parse(t):null;}catch(_){d=t;}
+ if(!r.ok)throw Error(typeof d==="object"?(d?.message||d?.error||"خطا"):("خطا "+r.status));
+ return d;
+}
+function status(t,bad=false){E("status").textContent=t;E("status").classList.toggle("bad",bad);}
+async function load(){
+ const unit=E("unit").value;
+ active=false;E("send").disabled=true;E("candidate").disabled=true;
+ E("candidate").innerHTML='<option value="">در حال دریافت...</option>';
+ status("بررسی وضعیت رأی‌گیری "+unit+"...");
+ try{
+  const d=await rpc(unit==="RV"?"rvctl_rv_vote_public_candidates":"rvmall_vote_public_candidates");
+  if(!d?.active){status(d?.message||"رأی‌گیری در این مجموعه فعال نیست.");E("candidate").innerHTML='<option value="">نامزد فعال نیست</option>';return;}
+  const people=d.candidates||[];
+  E("candidate").innerHTML='<option value="">یک نفر را انتخاب کنید</option>';
+  for(const p of people){
+   const opt=document.createElement("option");opt.value=p.id;opt.textContent=p.name+(p.position?" · "+p.position:"");
+   E("candidate").append(opt);
+  }
+  active=people.length>0;
+  E("candidate").disabled=!active;E("send").disabled=!active;
+  status(active?"دوره فعال: "+d.label+" · پایان: "+new Date(d.ends_at).toLocaleString("fa-IR",{timeZone:"Asia/Tehran"}):"هنوز نامزد فعال تعیین نشده است.");
+ }catch(e){status("امکان دریافت نامزدها نیست: "+e.message,true);}
+}
+async function send(){
+ if(!active)return;
+ const code=E("code").value.toUpperCase().trim(),candidate=E("candidate").value,unit=E("unit").value;
+ if(!/^[0-9A-F]{24}$/.test(code)||!candidate){status("نامزد و کد معتبر یک‌بارمصرف را انتخاب کنید.",true);return;}
+ if(!confirm("رأی شما برای همین کارمند ثبت شود؟ رأی پس از ثبت قابل تغییر نیست."))return;
+ const btn=E("send");btn.disabled=true;
+ try{
+  const d=await rpc(unit==="RV"?"rvctl_rv_vote_cast":"rvmall_vote_cast",
+   unit==="RV"?{p_code:code,p_staff_id:candidate}:{p_code:code,p_person_id:candidate});
+  status(d.message||"رأی شما ثبت شد. سپاسگزاریم.");
+  E("code").value="";active=false;E("candidate").disabled=true;
+ }catch(e){status("رأی ثبت نشد: "+e.message,true);btn.disabled=false;}
+}
+E("unit").addEventListener("change",load);E("send").addEventListener("click",send);
+load();
+})();
+</script>
+</body></html>
