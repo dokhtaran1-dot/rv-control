@@ -111,6 +111,7 @@ window.supabase={createClient:(base,key)=>{
 <button data-tab="setup" id="nav-setup" class="hide">راه‌اندازی کل مجموعه</button>
 <button data-tab="rv-performance" id="nav-rv-performance" class="hide">امتیازدهی RV</button>
 <button data-tab="my-rewards" id="nav-my-rewards" class="hide">پاداش‌ها و فیش شخصی</button>
+<button data-tab="private" id="nav-private" class="hide">چت مالک و شماره شبا</button>
 <button data-tab="shifts" id="nav-shifts">شیفت‌ها</button>
 <button data-tab="finance" id="nav-finance">مالی روزانه</button>
 <button data-tab="inventory" id="nav-inventory">انبار</button>
@@ -263,6 +264,36 @@ window.supabase={createClient:(base,key)=>{
 <p id="rvp-summary" class="muted mini"></p><p id="rvp-info" class="info">در حال بررسی دسترسی...</p></div>
 <div id="rvp-people"></div>
 </section>
+<section id="view-private" class="hide">
+<div class="card"><h2>چت مستقیم با مالک · دسترسی کارکنان · شماره شبا</h2>
+<p class="muted">پیام خصوصی هر کارمند فقط برای همان کارمند و مالک بخش قابل مشاهده است. در حساب مالک می‌توان وضعیت اتصال حساب هر نفر را دید. شماره شبا با دکمه کپی در حافظه گوشی یا رایانه ذخیره می‌شود؛ هیچ انتقال بانکی انجام نمی‌شود.</p>
+<div class="row"><b>گفت‌وگوهای خصوصی</b><button class="outline action" id="private-refresh">بازخوانی</button></div>
+<input id="private-filter" placeholder="جست‌وجوی نام یا سمت کارکنان" maxlength="100">
+<p class="info" id="private-message">ابتدا از حساب مجاز وارد شوید.</p>
+<button id="private-copy-all" class="outline block hide">کپی همه شباهای تأییدشده به همراه نام</button>
+<div id="private-list"></div>
+</div>
+<div id="private-detail" class="hide">
+<div class="card"><h2 id="private-current">انتخاب کارمند</h2>
+<h3>گفت‌وگوی خصوصی</h3>
+<div id="private-thread" style="max-height:430px;overflow:auto;margin:12px 0">پیام‌ها در حال دریافت‌اند.</div>
+<div class="field"><label>متن پیام (حداکثر ۲۰۰۰ نویسه)</label>
+<textarea id="private-compose" maxlength="2000" rows="3" placeholder="پیام مستقیم به مالک"></textarea></div>
+<button id="private-send" class="block">ارسال پیام داخل RV CONTROL</button>
+<p class="muted mini">برای دریافت پیام‌ها باید برنامه باز شود. ارسال پیامک، واتس‌اپ یا اعلان خارج از برنامه فعال نیست.</p>
+</div>
+<div class="card"><h2>شماره شبا · قابل کپی</h2>
+<p id="private-bank-owner-note" class="muted">شماره شبا تنها برای حساب‌های مجاز قابل مشاهده است.</p>
+<div class="field"><label>شماره شبا (IR + ۲۴ رقم)</label><input id="private-sheba" dir="ltr" maxlength="38" placeholder="IR000000000000000000000000" autocomplete="off"></div>
+<p id="private-sheba-status" class="muted">هنوز ثبت نشده</p>
+<div class="row" style="justify-content:flex-start;flex-wrap:wrap">
+<button id="private-sheba-save" class="action">ثبت یا اصلاح شبا</button>
+<button id="private-copy" class="outline action">کپی شبا</button>
+<button id="private-sheba-verify" class="outline action hide">تأیید شبا توسط مالک</button>
+<button id="private-sheba-reject" class="outline action hide">رد برای اصلاح</button>
+</div>
+<p class="muted mini">پیش از تأیید، مالک باید نام صاحب حساب را با مدارک معتبر تطبیق دهد. ثبت شبا به معنی پرداخت حقوق نیست.</p>
+</div></div></section>
 <section id="view-my-rewards" class="hide"><div class="card">
 <h2>فیش شخصی حقوق و پاداش</h2>
 <p class="muted">هر نفر فقط حقوق پایه RV (در صورت اتصال حساب) و پاداش‌های تأییدشده خودش را می‌بیند. فیش RM از بخش اختصاصی جداگانه قابل مشاهده است.</p>
@@ -366,7 +397,7 @@ async function begin(){
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  el("newQR").onclick=issueQR;el("scanButton").onclick=scanQR;el("makeRequest").onclick=createRequest;
  el("staffSearch").oninput=renderStaff;el("staffStatus").onchange=renderStaff;
- window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();window.MallPerformance?.setup?.();window.CombinedPayroll?.setup?.();window.HRControl?.setup?.();window.Rollout?.setup?.();window.RVPerformance?.setup?.();
+ window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();window.MallPerformance?.setup?.();window.CombinedPayroll?.setup?.();window.HRControl?.setup?.();window.Rollout?.setup?.();window.RVPerformance?.setup?.();window.PrivateStaff?.setup?.();
  el("refreshPresence").onclick=loadPresence;
  el("my-payroll-refresh").onclick=loadMyPayroll;
  const r=await db.auth.getSession();session=r.data.session;
@@ -435,6 +466,7 @@ async function prepare(){
   await window.HRControl?.authorize?.();
   await window.Rollout?.authorize?.();
   await window.RVPerformance?.authorize?.();
+  await window.PrivateStaff?.authorize?.();
   if(!role&&!window.MallPayroll?.enabled?.()&&employeePayrollRole!=="mall_employee"){show("pending");return;}
   const u=await db.auth.getUser();
   let accountLabel=u.data.user?.phone||u.data.user?.email||"کاربر";
@@ -462,7 +494,7 @@ async function prepare(){
   el("nav-my-payroll").classList.toggle("hide",employeePayrollRole!=="mall_employee");
   if(!role){
    const onlyEmployee=employeePayrollRole==="mall_employee"&&!window.MallPayroll?.enabled?.();
-   document.querySelectorAll("[data-tab]").forEach(b=>{if(b.dataset.tab!==(onlyEmployee?"my-payroll":"mall-payroll")&&!(b.dataset.tab==="performance"&&window.MallPerformance?.enabled?.())&&!(b.dataset.tab==="hr"&&window.HRControl?.enabled?.())&&!(b.dataset.tab==="my-rewards"&&window.RVPerformance?.rewardsEnabled?.())&&!(b.dataset.tab==="rv-performance"&&window.RVPerformance?.enabled?.()))b.classList.add("hide");});
+   document.querySelectorAll("[data-tab]").forEach(b=>{if(b.dataset.tab!==(onlyEmployee?"my-payroll":"mall-payroll")&&!(b.dataset.tab==="performance"&&window.MallPerformance?.enabled?.())&&!(b.dataset.tab==="hr"&&window.HRControl?.enabled?.())&&!(b.dataset.tab==="my-rewards"&&window.RVPerformance?.rewardsEnabled?.())&&!(b.dataset.tab==="rv-performance"&&window.RVPerformance?.enabled?.())&&!(b.dataset.tab==="private"&&window.PrivateStaff?.enabled?.()))b.classList.add("hide");});
    nav(onlyEmployee?"my-payroll":"mall-payroll");
    return;
   }
@@ -471,7 +503,7 @@ async function prepare(){
   else nav(["owner","executive","manager","auditor"].includes(role)?"dashboard":role==="kiosk"?"kiosk":"attendance");
  }catch(e){show("pending");}
 }
-async function logout(){await db.auth.signOut();session=null;role=null;employeePayrollRole=null;qrToken=null;window.MallPayroll?.reset?.();window.MallPerformance?.reset?.();window.CombinedPayroll?.reset?.();window.HRControl?.reset?.();window.Rollout?.reset?.();window.RVPerformance?.reset?.();el("nav-my-payroll").classList.add("hide");show("auth");}
+async function logout(){await db.auth.signOut();session=null;role=null;employeePayrollRole=null;qrToken=null;window.MallPayroll?.reset?.();window.MallPerformance?.reset?.();window.CombinedPayroll?.reset?.();window.HRControl?.reset?.();window.Rollout?.reset?.();window.RVPerformance?.reset?.();window.PrivateStaff?.reset?.();el("nav-my-payroll").classList.add("hide");show("auth");}
 function nav(next){
  if(next==="my-payroll"&&employeePayrollRole!=="mall_employee")return;
  if(next==="performance"&&!window.MallPerformance?.enabled?.())return;
@@ -479,10 +511,11 @@ function nav(next){
  if(next==="setup"&&!window.Rollout?.enabled?.())return;
  if(next==="rv-performance"&&!window.RVPerformance?.enabled?.())return;
  if(next==="my-rewards"&&!window.RVPerformance?.rewardsEnabled?.())return;
+ if(next==="private"&&!window.PrivateStaff?.enabled?.())return;
  if(next==="combined-payroll"&&!window.CombinedPayroll?.enabled?.())return;
  tab=next;el("flash").classList.add("hide");
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===next));
- ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","my-payroll","combined-payroll","performance","hr","setup","rv-performance","my-rewards","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
+ ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","my-payroll","combined-payroll","performance","hr","setup","rv-performance","my-rewards","private","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
  if(next==="dashboard")loadDashboard(true);
  if(next==="presence")loadPresence();
  if(next==="requests")loadRequests();
@@ -497,6 +530,7 @@ function nav(next){
  if(next==="setup")window.Rollout?.load?.();
  if(next==="rv-performance")window.RVPerformance?.load?.();
  if(next==="my-rewards")window.RVPerformance?.loadRewards?.();
+ if(next==="private")window.PrivateStaff?.load?.();
  if(next==="combined-payroll")window.CombinedPayroll?.load?.();
 }
 async function loadMyPayroll(){
@@ -682,4 +716,5 @@ window.addEventListener("load",begin);
 <script src="./hr-control.js" defer></script>
 <script src="./rollout.js" defer></script>
 <script src="./rv-performance.js" defer></script>
+<script src="./staff-private.js" defer></script>
 </body></html>
