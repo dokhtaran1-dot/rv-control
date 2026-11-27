@@ -14,6 +14,17 @@ function setup(){
  E("hr-search").addEventListener("input",v=>{filter=v.target.value.trim();render();});
  E("hr-unit").addEventListener("change",v=>{unit=v.target.value;render();});
  E("hr-refresh").addEventListener("click",load);
+ E("hr-people").addEventListener("change",e=>{
+  const select=e.target.closest('select[data-hr-field="supervisor_id"]');
+  if(!select||!board)return;
+  const card=select.closest("[data-hr-person]");
+  const person=board.people.find(p=>personKey(p)===card?.dataset.hrPerson);
+  const manager=board.people.find(p=>p.unit===person?.unit&&p.id===select.value);
+  if(manager){
+   const name=card.querySelector('[data-hr-field="supervisor_name"]');
+   if(name)name.value=manager.full_name;
+  }
+ });
  E("hr-only-pending").addEventListener("change",v=>{onlyPending=v.target.checked;render();});
  E("hr-next-pending").addEventListener("click",()=>{
   if(!board)return;
@@ -123,6 +134,15 @@ async function run(b){
    p_escalation:field("escalation").trim(),p_duties:field("duties").trim(),
    p_confirmed:!!card.querySelector('[data-hr-field="confirmed"]')?.checked};
   if(args.p_duties.length<10){message("شرح وظایف این نفر باید کامل نوشته شود.",true);return;}
+  if(args.p_confirmed){
+   const isTop=p.full_name==="حامد قنبری درویش";
+   if(!isTop && (!args.p_supervisor_name||!args.p_leave_approver||!args.p_escalation)){
+    message("پیش از تأیید نهایی، مدیر مستقیم، مرجع مرخصی و مسیر گزارش را تکمیل کن.",true);return;
+   }
+   if(/نیازمند تأیید|تعیین نشده|نامشخص/.test(args.p_supervisor_name+" "+args.p_leave_approver)){
+    message("نام مدیر یا تأییدکننده مرخصی هنوز نامشخص است؛ اول آن را اصلاح کن.",true);return;
+   }
+  }
   if(!confirm("شرح وظایف و مرجع مستقیم «"+p.full_name+"» ذخیره شود؟"))return;
  }else if(action==="report"){
   if(!isOwner(p.unit)&&!p.is_subordinate)return;
