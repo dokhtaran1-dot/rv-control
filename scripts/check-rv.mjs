@@ -8,6 +8,9 @@ const mall = fs.readFileSync("mall-payroll.js","utf8");
 const performance = fs.readFileSync("mall-performance.js","utf8");
 const combined = fs.readFileSync("combined-payroll.js","utf8");
 const hr = fs.readFileSync("hr-control.js","utf8");
+const rollout = fs.readFileSync("rollout.js","utf8");
+const rvPerformance = fs.readFileSync("rv-performance.js","utf8");
+const voteHtml = fs.readFileSync("vote.html","utf8");
 const workflow = fs.readFileSync(".github/workflows/deploy-pages.yml","utf8");
 const checks = [];
 function test(name, fn) { fn(); checks.push(name); }
@@ -20,10 +23,16 @@ test("Independent database only", () => {
   assert.ok(!performance.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!combined.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!hr.includes("jwddfcsikkialxzbrhle"));
+  assert.ok(!rollout.includes("jwddfcsikkialxzbrhle"));
+  assert.ok(!rvPerformance.includes("jwddfcsikkialxzbrhle"));
+  assert.ok(!voteHtml.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!mall.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!performance.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!combined.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!hr.includes("SUPABASE_SERVICE_ROLE_KEY"));
+  assert.ok(!rollout.includes("SUPABASE_SERVICE_ROLE_KEY"));
+  assert.ok(!rvPerformance.includes("SUPABASE_SERVICE_ROLE_KEY"));
+  assert.ok(!voteHtml.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!html.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!modules.includes("SUPABASE_SERVICE_ROLE_KEY"));
 });
@@ -37,6 +46,9 @@ test("JavaScript syntax", () => {
   new vm.Script(performance,{filename:"mall-performance.js"});
   new vm.Script(combined,{filename:"combined-payroll.js"});
   new vm.Script(hr,{filename:"hr-control.js"});
+  new vm.Script(rollout,{filename:"rollout.js"});
+  new vm.Script(rvPerformance,{filename:"rv-performance.js"});
+  for(const m of voteHtml.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g))if(m[1].trim())new vm.Script(m[1],{filename:"vote.html inline"});
 });
 test("Module deployed as separate script", () => {
   assert.ok(html.includes('<script src="./rv-modules.js" defer></script>'));
@@ -44,11 +56,13 @@ test("Module deployed as separate script", () => {
   assert.ok(html.includes('<script src="./mall-performance.js" defer></script>'));
   assert.ok(html.includes('<script src="./combined-payroll.js" defer></script>'));
   assert.ok(html.includes('<script src="./hr-control.js" defer></script>'));
+  assert.ok(html.includes('<script src="./rollout.js" defer></script>'));
+  assert.ok(html.includes('<script src="./rv-performance.js" defer></script>'));
   assert.ok(html.includes("window.RVCTRLModules?.attach?.()"));
 });
 test("Tab panels", () => {
   for(const t of ["dashboard","presence","attendance","kiosk","requests","people",
-                  "payroll","mall-payroll","combined-payroll","performance","hr","shifts","finance","inventory","accounts"]){
+                  "payroll","mall-payroll","combined-payroll","performance","hr","setup","rv-performance","my-rewards","shifts","finance","inventory","accounts"]){
     assert.ok(html.includes('data-tab="'+t+'"'),"missing tab "+t);
     assert.ok(html.includes('id="view-'+t+'"'),"missing panel "+t);
   }
@@ -56,7 +70,7 @@ test("Tab panels", () => {
 test("Referenced DOM elements exist", () => {
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
   assert.equal(ids.length,new Set(ids).size,"duplicate HTML id");
-  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g),...mall.matchAll(/\bE\("([^"]+)"\)/g),...performance.matchAll(/\bE\("([^"]+)"\)/g),...combined.matchAll(/\bE\("([^"]+)"\)/g),...hr.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
+  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g),...mall.matchAll(/\bE\("([^"]+)"\)/g),...performance.matchAll(/\bE\("([^"]+)"\)/g),...combined.matchAll(/\bE\("([^"]+)"\)/g),...hr.matchAll(/\bE\("([^"]+)"\)/g),...rollout.matchAll(/\bE\("([^"]+)"\)/g),...rvPerformance.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
   for(const e of expected)assert.ok(ids.includes(e),"missing module HTML id "+e);
 });
 test("No accidental HTML section truncation",()=>{
@@ -117,6 +131,39 @@ test("Owner HR roles, employee duties, incident review, no automatic fines",()=>
   assert.ok(!hr.includes("قانون کار"));
   assert.ok(workflow.includes("test -s dist/hr-control.js"));
   assert.ok(workflow.includes("'hr-control.js'"));
+});
+test("Owner 7-step launchpad, customer codes, private bonuses and RV scoring",()=>{
+ for(const tab of ["setup","rv-performance","my-rewards"]){
+   assert.ok(html.includes('id="nav-'+tab+'" class="hide"'));
+   assert.ok(html.includes('id="view-'+tab+'" class="hide"'));
+ }
+ assert.ok(html.includes("window.Rollout?.setup?.()"));
+ assert.ok(html.includes("await window.Rollout?.authorize?.()"));
+ assert.ok(html.includes("window.RVPerformance?.setup?.()"));
+ assert.ok(html.includes("await window.RVPerformance?.authorize?.()"));
+ for(const id of ["setup-steps","setup-reload","setup-owner-note","setup-message","setup-salary-person","setup-salary-save",
+     "setup-bonus-unit","setup-bonus-person","setup-bonus-month","setup-bonus-save","setup-bonus-list","setup-voting",
+     "setup-rv-round","setup-lateness","setup-lateness-result","rvp-month","rvp-people","rvp-refresh",
+     "my-rewards-refresh","my-rewards-list"]){
+   assert.ok(html.includes('id="'+id+'"'),"Missing rollout id "+id);
+ }
+ for(const name of ["rvctl_setup_progress","rvctl_bonus_board","rvctl_bonus_save","rvctl_bonus_decide",
+    "rvctl_owner_salary_set","rvctl_rv_vote_admin","rvmall_vote_admin","rvctl_rv_attendance_lateness_preview"])
+  assert.ok(rollout.includes(name),"Missing rollout RPC "+name);
+ for(const name of ["rvctl_rv_performance_board","rvctl_rv_performance_save","rvctl_rv_performance_review","rvctl_my_pay_rewards"])
+  assert.ok(rvPerformance.includes(name),"Missing RV scoring RPC "+name);
+ assert.ok(voteHtml.includes("rvmall_vote_cast"));
+ assert.ok(voteHtml.includes("rvctl_rv_vote_cast"));
+ assert.ok(voteHtml.includes("rvmall_vote_public_candidates"));
+ assert.ok(voteHtml.includes("rvctl_rv_vote_public_candidates"));
+ assert.ok(!voteHtml.includes("SUPABASE_SERVICE_ROLE_KEY"));
+ assert.ok(!rollout.includes("rvmall_payroll_decide"));
+ assert.ok(!rvPerformance.includes("rvmall_payroll_decide"));
+ assert.ok(!rollout.includes("قانون کار"));
+ for(const file of ["rollout.js","rv-performance.js","vote.html"]){
+  assert.ok(workflow.includes("test -s dist/"+file),"No publish file "+file);
+  assert.ok(workflow.includes("'"+file+"'"),"No publish trigger "+file);
+ }
 });
 test("Mobile alias login and protected workflow",()=>{
   assert.ok(html.includes("phoneLoginAlias(phone,\"rv2-\")"));
