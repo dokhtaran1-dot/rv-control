@@ -10,6 +10,7 @@ const combined = fs.readFileSync("combined-payroll.js","utf8");
 const hr = fs.readFileSync("hr-control.js","utf8");
 const rollout = fs.readFileSync("rollout.js","utf8");
 const rvPerformance = fs.readFileSync("rv-performance.js","utf8");
+const privateStaff = fs.readFileSync("staff-private.js","utf8");
 const voteHtml = fs.readFileSync("vote.html","utf8");
 const workflow = fs.readFileSync(".github/workflows/deploy-pages.yml","utf8");
 const checks = [];
@@ -25,6 +26,7 @@ test("Independent database only", () => {
   assert.ok(!hr.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!rollout.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!rvPerformance.includes("jwddfcsikkialxzbrhle"));
+  assert.ok(!privateStaff.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!voteHtml.includes("jwddfcsikkialxzbrhle"));
   assert.ok(!mall.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!performance.includes("SUPABASE_SERVICE_ROLE_KEY"));
@@ -32,6 +34,7 @@ test("Independent database only", () => {
   assert.ok(!hr.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!rollout.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!rvPerformance.includes("SUPABASE_SERVICE_ROLE_KEY"));
+  assert.ok(!privateStaff.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!voteHtml.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!html.includes("SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(!modules.includes("SUPABASE_SERVICE_ROLE_KEY"));
@@ -48,6 +51,7 @@ test("JavaScript syntax", () => {
   new vm.Script(hr,{filename:"hr-control.js"});
   new vm.Script(rollout,{filename:"rollout.js"});
   new vm.Script(rvPerformance,{filename:"rv-performance.js"});
+  new vm.Script(privateStaff,{filename:"staff-private.js"});
   for(const m of voteHtml.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g))if(m[1].trim())new vm.Script(m[1],{filename:"vote.html inline"});
 });
 test("Module deployed as separate script", () => {
@@ -58,11 +62,12 @@ test("Module deployed as separate script", () => {
   assert.ok(html.includes('<script src="./hr-control.js" defer></script>'));
   assert.ok(html.includes('<script src="./rollout.js" defer></script>'));
   assert.ok(html.includes('<script src="./rv-performance.js" defer></script>'));
+  assert.ok(html.includes('<script src="./staff-private.js" defer></script>'));
   assert.ok(html.includes("window.RVCTRLModules?.attach?.()"));
 });
 test("Tab panels", () => {
   for(const t of ["dashboard","presence","attendance","kiosk","requests","people",
-                  "payroll","mall-payroll","combined-payroll","performance","hr","setup","rv-performance","my-rewards","shifts","finance","inventory","accounts"]){
+                  "payroll","mall-payroll","combined-payroll","performance","hr","setup","rv-performance","my-rewards","private","shifts","finance","inventory","accounts"]){
     assert.ok(html.includes('data-tab="'+t+'"'),"missing tab "+t);
     assert.ok(html.includes('id="view-'+t+'"'),"missing panel "+t);
   }
@@ -70,7 +75,7 @@ test("Tab panels", () => {
 test("Referenced DOM elements exist", () => {
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
   assert.equal(ids.length,new Set(ids).size,"duplicate HTML id");
-  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g),...mall.matchAll(/\bE\("([^"]+)"\)/g),...performance.matchAll(/\bE\("([^"]+)"\)/g),...combined.matchAll(/\bE\("([^"]+)"\)/g),...hr.matchAll(/\bE\("([^"]+)"\)/g),...rollout.matchAll(/\bE\("([^"]+)"\)/g),...rvPerformance.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
+  const expected=[...modules.matchAll(/\bE\("([^"]+)"\)/g),...mall.matchAll(/\bE\("([^"]+)"\)/g),...performance.matchAll(/\bE\("([^"]+)"\)/g),...combined.matchAll(/\bE\("([^"]+)"\)/g),...hr.matchAll(/\bE\("([^"]+)"\)/g),...rollout.matchAll(/\bE\("([^"]+)"\)/g),...rvPerformance.matchAll(/\bE\("([^"]+)"\)/g),...privateStaff.matchAll(/\bE\("([^"]+)"\)/g)].map(x=>x[1]);
   for(const e of expected)assert.ok(ids.includes(e),"missing module HTML id "+e);
 });
 test("No accidental HTML section truncation",()=>{
@@ -167,6 +172,24 @@ test("Owner 7-step launchpad, customer codes, private bonuses and RV scoring",()
   assert.ok(workflow.includes("test -s dist/"+file),"No publish file "+file);
   assert.ok(workflow.includes("'"+file+"'"),"No publish trigger "+file);
  }
+});
+test("Private owner chat, copy IBAN and staff-specific permissions",()=>{
+ assert.ok(html.includes('id="nav-private" class="hide"'));
+ assert.ok(html.includes('id="view-private" class="hide"'));
+ assert.ok(html.includes('await window.PrivateStaff?.authorize?.()'));
+ assert.ok(html.includes('window.PrivateStaff?.setup?.()'));
+ assert.ok(html.includes('if(next==="private")window.PrivateStaff?.load?.()'));
+ for(const id of ["private-message","private-list","private-thread","private-compose","private-send",
+ "private-sheba","private-sheba-save","private-sheba-verify","private-sheba-reject","private-copy","private-copy-all"]){
+  assert.ok(html.includes('id="'+id+'"'),"Missing staff private id "+id);
+ }
+ for(const fn of ["rvctl_private_people","rvctl_private_thread","rvctl_private_send","rvctl_sheba_submit","rvctl_sheba_review"])
+  assert.ok(privateStaff.includes(fn),"Missing private RPC "+fn);
+ assert.ok(privateStaff.includes("navigator.clipboard"));
+ assert.ok(!privateStaff.includes("rvmall_payroll_decide"));
+ assert.ok(!privateStaff.includes("rvctl_owner_salary_set"));
+ assert.ok(workflow.includes("test -s dist/staff-private.js"));
+ assert.ok(workflow.includes("'staff-private.js'"));
 });
 test("Mobile alias login and protected workflow",()=>{
   assert.ok(html.includes("phoneLoginAlias(phone,\"rv2-\")"));
