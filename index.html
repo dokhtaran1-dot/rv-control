@@ -276,6 +276,7 @@ window.supabase={createClient:(base,key)=>{
  <div class="info"><b>ضوابط گزارش انضباطی:</b> تأخیر بر اساس تعداد دقیقه واقعی ثبت می‌شود. اجرا نکردن دستور کاری مجاز در مرحله اول ۲۰۰ هزار، مرحله دوم ۱ میلیون و مرحله سوم ۵ میلیون تومان به‌عنوان مبلغ مرجع پیشنهادی برای بررسی مدیریت درج می‌شود. هر مورد مستند و دارای فرصت پاسخ کارمند است. هیچ مبلغی به‌صورت خودکار از حقوق، مزایا یا پاداش کسر نمی‌شود.</div>
  <div class="input-row"><div class="field"><label>بخش</label><select id="hr-unit"><option value="all">همه بخش‌های مجاز</option><option value="RV">رویال ویلیج کافه (RV)</option><option value="RM">رویال مال (RM)</option></select></div><div class="field"><label>نام، سمت یا مدیر مستقیم</label><input id="hr-search" placeholder="جست‌وجوی کارکنان"></div></div>
  <div class="row"><b id="hr-count">—</b><button class="outline action" id="hr-refresh">بازخوانی پرونده‌ها</button></div>
+ <div class="row" style="flex-wrap:wrap"><label><input id="hr-only-pending" type="checkbox" style="width:auto"> نمایش فقط پرونده‌های تأییدنشده</label><button id="hr-next-pending" class="outline action">بازبینی پروندهٔ بعدی</button></div>
  <p class="mini muted" id="hr-info">در حال بررسی دسترسی...</p>
 </div>
 <div class="card"><h2>سلسله‌مراتب و شرح وظایف عمومی سمت‌ها</h2><div id="hr-catalog"></div></div>
