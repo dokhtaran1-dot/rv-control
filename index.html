@@ -108,6 +108,9 @@ window.supabase={createClient:(base,key)=>{
 <button data-tab="combined-payroll" id="nav-combined-payroll" class="hide">حقوق کل RV + RM</button>
 <button data-tab="performance" id="nav-performance" class="hide">ارزیابی عملکرد</button>
 <button data-tab="hr" id="nav-hr" class="hide">وظایف، سلسله‌مراتب و انضباط</button>
+<button data-tab="setup" id="nav-setup" class="hide">راه‌اندازی کل مجموعه</button>
+<button data-tab="rv-performance" id="nav-rv-performance" class="hide">امتیازدهی RV</button>
+<button data-tab="my-rewards" id="nav-my-rewards" class="hide">پاداش‌ها و فیش شخصی</button>
 <button data-tab="shifts" id="nav-shifts">شیفت‌ها</button>
 <button data-tab="finance" id="nav-finance">مالی روزانه</button>
 <button data-tab="inventory" id="nav-inventory">انبار</button>
@@ -198,6 +201,74 @@ window.supabase={createClient:(base,key)=>{
  <div class="card"><h2>جزئیات حقوق RV · ماهانه</h2><div id="combined-rv-list"></div></div>
  <div class="card"><h2>جزئیات حقوق RM · دوره انتخابی</h2><div id="combined-rm-list"></div></div>
 </section>
+<section id="view-setup" class="hide">
+<div class="card"><h2>راه‌اندازی کامل هفت مرحله · RV + RM</h2>
+<p class="muted">پنل اجرای مالک برای سلسله‌مراتب، حساب کارکنان، پاداش، رأی مشتریان، ارزیابی، تأخیر و حقوق. مرحله‌های نیازمند اطلاعات واقعی یا امضای مالک فقط پس از تأیید شما اجرا می‌شوند.</p>
+<p class="info" id="setup-owner-note">گزارش محرمانه ویژه مالک</p>
+<button class="outline block" id="setup-reload">به‌روزرسانی وضعیت همه بخش‌ها</button>
+<div id="setup-steps"></div><p class="mini muted" id="setup-message">وضعیت سامانه در حال بررسی است.</p>
+</div>
+<div class="card"><h2>۱ · تأیید چارت سازمانی و شرح وظایف</h2>
+<p class="muted">هر پرونده تا بررسی تو پیش‌نویس است. مدیر مستقیم و مرجع مرخصی را در پرونده هر نفر مشخص و تیک «تأیید مالک» را بزن. پس از تأیید پرونده RM، مسیر ارزیابی مدیر مستقیم نیز در سیستم فعال می‌شود.</p>
+<button class="outline block" id="setup-go-hr">رفتن به شرح وظایف ۳۲ نفر</button>
+</div>
+<div class="card"><h2>۲ · حساب کارکنان</h2>
+<p class="muted">هر کارمند باید با حساب واقعی خودش وارد شود. برای RV حساب و نقش از «حساب‌ها» تخصیص داده می‌شود. برای RM پس از تأیید ایمیل، در «حقوق رویال مال» حساب به پرونده شخصی متصل می‌شود. بدون حساب واقعی یا ایمیل تأییدشده نمی‌توان اتصال را ساخت.</p>
+<div class="input-row"><button class="outline action" id="setup-go-accounts">حساب‌های RV</button><button class="outline action" id="setup-go-mall">اتصال حساب‌های RM</button></div>
+</div>
+<div class="card"><h2>۳ · پاداش مالک، مدیریت و رأی مشتریان</h2>
+<p class="muted">هر پاداش اول با مبلغ واقعی به صورت پیش‌نویس ثبت می‌شود؛ تصمیم مالک در مرحله جداگانه است. این ثبت پولی انتقال نمی‌دهد و حقوق پایه را تغییر نمی‌دهد.</p>
+<div class="input-row"><div class="field"><label>مجموعه</label><select id="setup-bonus-unit"><option value="RV">رویال ویلیج RV</option><option value="RM">رویال مال RM</option></select></div>
+<div class="field"><label>کارمند</label><select id="setup-bonus-person"><option value="">انتخاب کنید</option></select></div></div>
+<div class="input-row"><div class="field"><label>نوع پاداش</label><select id="setup-bonus-kind"><option value="owner">پاداش مالک</option><option value="management">پاداش مدیریت</option><option value="customer_vote">پاداش مشتریان (پس از نتیجه قطعی)</option></select></div>
+<div class="field"><label>ماه پاداش (میلادی)</label><input id="setup-bonus-month" type="month" dir="ltr"></div></div>
+<div class="field"><label>مبلغ به تومان</label><input id="setup-bonus-amount" type="number" min="1" step="1" inputmode="numeric" placeholder="مبلغ واقعی را وارد کنید"></div>
+<div class="field"><label>دلیل پاداش</label><textarea id="setup-bonus-reason" maxlength="800" rows="2"></textarea></div>
+<button class="block" id="setup-bonus-save">ثبت پیشنهاد پاداش</button>
+<h3 style="margin-top:18px">پیشنهادها و تأییدهای همین ماه</h3><div id="setup-bonus-list"></div>
+</div>
+<div class="card"><h2>۴ · رأی‌گیری ماهانه مشتریان</h2>
+<p class="muted">انتخاب نامزدها با مالک است؛ کدهای تصادفی فقط یک‌بار مصرف می‌شوند. برنده پس از پایان دوره و شمارش رأی‌ها نهایی می‌شود. جایزه «یک حقوق پایه اضافه» فقط در صورت وجود حقوق ماهانه واقعی و تأیید جداگانه مالک ثبت می‌شود.</p>
+<p><a href="./vote.html" target="_blank" rel="noopener">صفحه رأی مشتریان RV و RM</a></p>
+<div id="setup-rv-round-card" class="card hide">
+<h3>ساخت دوره جدید رأی RV</h3>
+<div class="field"><label>عنوان دوره</label><input id="setup-rv-round-label" placeholder="مثلاً برترین کارمند آذر ۱۴۰۵" maxlength="100"></div>
+<div class="input-row"><div class="field"><label>شروع</label><input id="setup-rv-round-start" type="datetime-local"></div><div class="field"><label>پایان</label><input id="setup-rv-round-end" type="datetime-local"></div></div>
+<div class="field"><label>ماه مبنای پاداش</label><input type="month" id="setup-rv-round-month"></div>
+<button class="outline block" id="setup-rv-round">ثبت دوره رأی RV</button></div>
+<div id="setup-voting"></div>
+</div>
+<div class="card"><h2>۵ · ارزیابی ماهانه مدیران و مالک</h2>
+<p class="muted">امتیاز ۱۰۰: وظایف ۴۰، حضور ۲۰، رضایت مشتری ۲۰، همکاری ۲۰. ابتدا مدیر مستقیم امتیاز و شواهد را ثبت می‌کند، سپس مالک تأیید می‌کند. امتیاز خودکار پاداش ایجاد نمی‌کند.</p>
+<div class="input-row"><button class="outline action" id="setup-go-rv-score">امتیاز RV</button><button class="outline action" id="setup-go-rm-score">امتیاز RM</button></div>
+</div>
+<div class="card"><h2>۶ · بررسی تأخیر و انضباط</h2>
+<p class="muted">شیفت RV با اولین اسکن QR تطبیق می‌شود. نبود اسکن به معنی غیبت قطعی نیست. برای RM و موارد خاص، گزارش تأخیر و تخلف از بخش شرح وظایف به صورت دستی و مستند ثبت می‌شود.</p>
+<button class="outline block" id="setup-lateness">بررسی ۱۴ روز اخیر RV از روی شیفت و QR</button>
+<div id="setup-lateness-result"></div>
+</div>
+<div id="setup-salary-section" class="card"><h2>۷ · تکمیل حقوق واقعی RV</h2>
+<p class="muted" id="setup-salary-missing">حقوق نامشخص صفر محسوب نمی‌شود.</p>
+<div class="field"><label>کارمند با حقوق نامشخص</label><select id="setup-salary-person"><option value="">انتخاب نفر</option></select></div>
+<div class="field"><label>حقوق پایه ماهانه، تومان</label><input id="setup-salary-amount" type="number" min="1" step="1" inputmode="numeric"></div>
+<div class="field"><label>دلیل ثبت و تأیید عدد</label><textarea id="setup-salary-reason" maxlength="600" rows="2" placeholder="مثلاً مبلغ تأییدشده طبق قرارداد یا دستور مالک"></textarea></div>
+<button class="block" id="setup-salary-save">ثبت حقوق واقعی با سابقه تغییر</button>
+<p class="muted mini">حقوق RM برای دوره ۲ تا ۵ آبان جداگانه است؛ برای حقوق کل ماه باید دوره و ارقام واقعی جدا ثبت شوند.</p>
+</div>
+</section>
+<section id="view-rv-performance" class="hide">
+<div class="card"><h2>امتیازدهی ماهانه کارکنان RV</h2>
+<p class="muted">مدیران فقط نیروهای زیرمجموعه مستقیم خود را ارزیابی می‌کنند؛ مالک تأیید نهایی دارد. امتیازها اثری بر حقوق و پاداش ندارند مگر با تصمیم مستقل مالک.</p>
+<div class="input-row"><div class="field"><label>ماه امتیازدهی</label><input type="month" dir="ltr" id="rvp-month"></div><button class="outline action" id="rvp-refresh">بازخوانی امتیازها</button></div>
+<p id="rvp-summary" class="muted mini"></p><p id="rvp-info" class="info">در حال بررسی دسترسی...</p></div>
+<div id="rvp-people"></div>
+</section>
+<section id="view-my-rewards" class="hide"><div class="card">
+<h2>فیش شخصی حقوق و پاداش</h2>
+<p class="muted">هر نفر فقط حقوق پایه RV (در صورت اتصال حساب) و پاداش‌های تأییدشده خودش را می‌بیند. فیش RM از بخش اختصاصی جداگانه قابل مشاهده است.</p>
+<button id="my-rewards-refresh" class="outline block">بازخوانی فیش شخصی</button>
+<p id="my-rewards-info" class="info">در حال بررسی حساب...</p></div>
+<div id="my-rewards-list"></div></section>
 <section id="view-hr" class="hide">
 <div class="card">
  <h2>آیین‌نامه اجرایی · وظایف، سلسله‌مراتب و انضباط RV + RM</h2>
@@ -294,7 +365,7 @@ async function begin(){
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  el("newQR").onclick=issueQR;el("scanButton").onclick=scanQR;el("makeRequest").onclick=createRequest;
  el("staffSearch").oninput=renderStaff;el("staffStatus").onchange=renderStaff;
- window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();window.MallPerformance?.setup?.();window.CombinedPayroll?.setup?.();window.HRControl?.setup?.();
+ window.RVCTRLModules?.attach?.();window.MallPayroll?.setup?.();window.MallPerformance?.setup?.();window.CombinedPayroll?.setup?.();window.HRControl?.setup?.();window.Rollout?.setup?.();window.RVPerformance?.setup?.();
  el("refreshPresence").onclick=loadPresence;
  el("my-payroll-refresh").onclick=loadMyPayroll;
  const r=await db.auth.getSession();session=r.data.session;
@@ -361,6 +432,8 @@ async function prepare(){
   await window.MallPerformance?.authorize?.();
   await window.CombinedPayroll?.authorize?.();
   await window.HRControl?.authorize?.();
+  await window.Rollout?.authorize?.();
+  await window.RVPerformance?.authorize?.();
   if(!role&&!window.MallPayroll?.enabled?.()&&employeePayrollRole!=="mall_employee"){show("pending");return;}
   const u=await db.auth.getUser();
   let accountLabel=u.data.user?.phone||u.data.user?.email||"کاربر";
@@ -388,7 +461,7 @@ async function prepare(){
   el("nav-my-payroll").classList.toggle("hide",employeePayrollRole!=="mall_employee");
   if(!role){
    const onlyEmployee=employeePayrollRole==="mall_employee"&&!window.MallPayroll?.enabled?.();
-   document.querySelectorAll("[data-tab]").forEach(b=>{if(b.dataset.tab!==(onlyEmployee?"my-payroll":"mall-payroll")&&!(b.dataset.tab==="performance"&&window.MallPerformance?.enabled?.())&&!(b.dataset.tab==="hr"&&window.HRControl?.enabled?.()))b.classList.add("hide");});
+   document.querySelectorAll("[data-tab]").forEach(b=>{if(b.dataset.tab!==(onlyEmployee?"my-payroll":"mall-payroll")&&!(b.dataset.tab==="performance"&&window.MallPerformance?.enabled?.())&&!(b.dataset.tab==="hr"&&window.HRControl?.enabled?.())&&!(b.dataset.tab==="my-rewards"&&window.RVPerformance?.rewardsEnabled?.())&&!(b.dataset.tab==="rv-performance"&&window.RVPerformance?.enabled?.()))b.classList.add("hide");});
    nav(onlyEmployee?"my-payroll":"mall-payroll");
    return;
   }
@@ -397,15 +470,18 @@ async function prepare(){
   else nav(["owner","executive","manager","auditor"].includes(role)?"dashboard":role==="kiosk"?"kiosk":"attendance");
  }catch(e){show("pending");}
 }
-async function logout(){await db.auth.signOut();session=null;role=null;employeePayrollRole=null;qrToken=null;window.MallPayroll?.reset?.();window.MallPerformance?.reset?.();window.CombinedPayroll?.reset?.();window.HRControl?.reset?.();el("nav-my-payroll").classList.add("hide");show("auth");}
+async function logout(){await db.auth.signOut();session=null;role=null;employeePayrollRole=null;qrToken=null;window.MallPayroll?.reset?.();window.MallPerformance?.reset?.();window.CombinedPayroll?.reset?.();window.HRControl?.reset?.();window.Rollout?.reset?.();window.RVPerformance?.reset?.();el("nav-my-payroll").classList.add("hide");show("auth");}
 function nav(next){
  if(next==="my-payroll"&&employeePayrollRole!=="mall_employee")return;
  if(next==="performance"&&!window.MallPerformance?.enabled?.())return;
  if(next==="hr"&&!window.HRControl?.enabled?.())return;
+ if(next==="setup"&&!window.Rollout?.enabled?.())return;
+ if(next==="rv-performance"&&!window.RVPerformance?.enabled?.())return;
+ if(next==="my-rewards"&&!window.RVPerformance?.rewardsEnabled?.())return;
  if(next==="combined-payroll"&&!window.CombinedPayroll?.enabled?.())return;
  tab=next;el("flash").classList.add("hide");
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===next));
- ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","my-payroll","combined-payroll","performance","hr","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
+ ["dashboard","presence","attendance","kiosk","requests","people","payroll","mall-payroll","my-payroll","combined-payroll","performance","hr","setup","rv-performance","my-rewards","shifts","finance","inventory","accounts"].forEach(t=>el("view-"+t).classList.toggle("hide",t!==next));
  if(next==="dashboard")loadDashboard(true);
  if(next==="presence")loadPresence();
  if(next==="requests")loadRequests();
@@ -417,6 +493,9 @@ function nav(next){
  if(next==="my-payroll")loadMyPayroll();
  if(next==="performance")window.MallPerformance?.load?.();
  if(next==="hr")window.HRControl?.load?.();
+ if(next==="setup")window.Rollout?.load?.();
+ if(next==="rv-performance")window.RVPerformance?.load?.();
+ if(next==="my-rewards")window.RVPerformance?.loadRewards?.();
  if(next==="combined-payroll")window.CombinedPayroll?.load?.();
 }
 async function loadMyPayroll(){
@@ -600,4 +679,6 @@ window.addEventListener("load",begin);
 <script src="./mall-performance.js" defer></script>
 <script src="./combined-payroll.js" defer></script>
 <script src="./hr-control.js" defer></script>
+<script src="./rollout.js" defer></script>
+<script src="./rv-performance.js" defer></script>
 </body></html>
