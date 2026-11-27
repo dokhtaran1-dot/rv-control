@@ -6,13 +6,12 @@ const T=n=>Number(n??0).toLocaleString("fa-IR");
 const api=()=>window.RVCTRL;
 const labels={late:"تأخیر در حضور",unapproved_absence:"غیبت یا ترک محل بدون هماهنگی",refusal:"اجرا نکردن دستور کاری مجاز",conduct:"رفتار نامناسب",safety:"ایمنی و بهداشت",cash:"تخلف مالی یا صندوق",data:"اسناد و اطلاعات",other:"سایر"};
 const states={reported:"ثبت اولیه",notified:"ابلاغ و رسیدگی",responded:"پاسخ کارمند ثبت شد",closed:"مختومه با بررسی مالک",dismissed:"رد گزارش توسط مالک"};
-let allowed=false,board=null,filter="",unit="all",onlyPending=false;
+let allowed=false,board=null,filter="",onlyPending=false;
 const personKey=p=>p.unit+":"+p.id;
 const isOwner=u=>u==="RV"?!!board?.owner_rv:!!board?.owner_rm;
 function message(s,bad=false){const el=E("hr-info");el.textContent=s;el.classList.toggle("err",bad);}
 function setup(){
  E("hr-search").addEventListener("input",v=>{filter=v.target.value.trim();render();});
- E("hr-unit").addEventListener("change",v=>{unit=v.target.value;render();});
  E("hr-refresh").addEventListener("click",load);
  E("hr-people").addEventListener("change",e=>{
   const select=e.target.closest('select[data-hr-field="supervisor_id"]');
@@ -43,7 +42,7 @@ async function authorize(){
  allowed=false;board=null;E("nav-hr").classList.add("hide");
  try{
   const x=await api()?.rpc("rvctl_hr_board");
-  if(x && Array.isArray(x.people) && x.people.length){board=x;allowed=true;}
+  if(x && Array.isArray(x.people) && x.people.some(p=>p.unit==="RV")){board=x;allowed=true;}
  }catch(_){allowed=false;}
  E("nav-hr").classList.toggle("hide",!allowed);
 }
@@ -60,8 +59,8 @@ async function load(){
 }
 function render(){
  if(!board)return;
- const staff=board.people||[];
- const shown=staff.filter(p=>(unit==="all"||p.unit===unit)&&(!onlyPending||!p.confirmed)&&[p.full_name,p.position,p.department,p.supervisor_name].join(" ").includes(filter));
+ const staff=(board.people||[]).filter(p=>p.unit==="RV");
+ const shown=staff.filter(p=>(!onlyPending||!p.confirmed)&&[p.full_name,p.position,p.department,p.supervisor_name].join(" ").includes(filter));
  E("hr-count").textContent=T(staff.length)+" پرونده فعال · "+T(staff.filter(p=>p.confirmed).length)+" مورد تأیید مالک · "+T(staff.filter(p=>!p.confirmed).length)+" منتظر بررسی";
  E("hr-people").innerHTML=shown.map(p=>{
   const owner=isOwner(p.unit);
@@ -96,7 +95,7 @@ function render(){
    (p.source_note?'<p class="mini muted">وضعیت منبع: '+S(p.source_note)+'</p>':"")+
    ownerPanel+reportPanel+'</div>';
  }).join("")||'<div class="card"><p class="muted">شخصی با این مشخصات در محدوده دسترسی شما یافت نشد.</p></div>';
- const incidents=(board.incidents||[]).filter(x=>unit==="all"||x.unit===unit);
+ const incidents=(board.incidents||[]).filter(x=>x.unit==="RV");
  E("hr-incidents").innerHTML=incidents.map(i=>{
   const p=staff.find(x=>x.unit===i.unit&&x.id===i.person_id);
   const amount=i.reference_amount_toman===null?"":'<div class="mini">مبلغ مرجع پیشنهادی: '+T(i.reference_amount_toman)+' تومان؛ بدون کسر از حقوق</div>';
@@ -115,7 +114,7 @@ function render(){
    (i.outcome_note?'<div class="mini muted">نتیجه بررسی: '+S(i.outcome_note)+'</div>':"")+
    '<div class="row" style="justify-content:flex-start;flex-wrap:wrap">'+reply+reviewPanel+'</div></div>';
  }).join("")||'<p class="muted">هنوز تخلف یا گزارش تأخیری ثبت نشده است.</p>';
- const catalog=(board.catalog||[]).filter(c=>unit==="all"||c.unit===unit);
+ const catalog=(board.catalog||[]).filter(c=>c.unit==="RV");
  E("hr-catalog").innerHTML=catalog.map(c=>
   '<details style="border-bottom:1px solid var(--line);padding:10px"><summary><b>'+S(c.unit)+' · '+S(c.title)+'</b> <span class="mini muted">← '+S(c.reports_to)+'</span></summary><p class="muted">'+S(c.duties)+'</p></details>'
  ).join("");
