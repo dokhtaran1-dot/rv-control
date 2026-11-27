@@ -19,6 +19,7 @@ function setup(){
  E("setup-go-rm-score").addEventListener("click",()=>document.getElementById("nav-performance")?.click());
  E("setup-go-rv-score").addEventListener("click",()=>document.getElementById("nav-rv-performance")?.click());
  E("setup-bonus-unit").addEventListener("change",fillBonusPeople);
+ E("setup-bonus-month").addEventListener("change",()=>loadBonusBoard());
  E("setup-bonus-save").addEventListener("click",saveBonus);
  E("setup-salary-save").addEventListener("click",saveSalary);
  E("setup-bonus-month").value=currentMonth();
@@ -27,6 +28,10 @@ function setup(){
  E("setup-voting").addEventListener("click",e=>{
   const b=e.target.closest("button[data-vote-action]");
   if(b)voteAction(b);
+ });
+ E("setup-voting").addEventListener("change",e=>{
+  const input=e.target.closest('input[data-vote-action="candidate"]');
+  if(input)voteAction(input);
  });
  E("setup-bonus-list").addEventListener("click",e=>{
   const b=e.target.closest("button[data-bonus-decision]");
