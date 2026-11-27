@@ -6,7 +6,7 @@ const T=n=>Number(n??0).toLocaleString("fa-IR");
 const api=()=>window.RVCTRL;
 const labels={late:"تأخیر در حضور",unapproved_absence:"غیبت یا ترک محل بدون هماهنگی",refusal:"اجرا نکردن دستور کاری مجاز",conduct:"رفتار نامناسب",safety:"ایمنی و بهداشت",cash:"تخلف مالی یا صندوق",data:"اسناد و اطلاعات",other:"سایر"};
 const states={reported:"ثبت اولیه",notified:"ابلاغ و رسیدگی",responded:"پاسخ کارمند ثبت شد",closed:"مختومه با بررسی مالک",dismissed:"رد گزارش توسط مالک"};
-let allowed=false,board=null,filter="",unit="all";
+let allowed=false,board=null,filter="",unit="all",onlyPending=false;
 const personKey=p=>p.unit+":"+p.id;
 const isOwner=u=>u==="RV"?!!board?.owner_rv:!!board?.owner_rm;
 function message(s,bad=false){const el=E("hr-info");el.textContent=s;el.classList.toggle("err",bad);}
@@ -14,6 +14,13 @@ function setup(){
  E("hr-search").addEventListener("input",v=>{filter=v.target.value.trim();render();});
  E("hr-unit").addEventListener("change",v=>{unit=v.target.value;render();});
  E("hr-refresh").addEventListener("click",load);
+ E("hr-only-pending").addEventListener("change",v=>{onlyPending=v.target.checked;render();});
+ E("hr-next-pending").addEventListener("click",()=>{
+  if(!board)return;
+  onlyPending=true;E("hr-only-pending").checked=true;render();
+  const next=E("hr-people").querySelector('[data-hr-person]');
+  if(next){next.scrollIntoView({behavior:"smooth",block:"start"});next.querySelector("details")?.setAttribute("open","");}
+ });
  E("hr-people").addEventListener("click",e=>{
   const b=e.target.closest("button[data-hr-action]");if(b)run(b);
  });
@@ -43,8 +50,8 @@ async function load(){
 function render(){
  if(!board)return;
  const staff=board.people||[];
- const shown=staff.filter(p=>(unit==="all"||p.unit===unit)&&[p.full_name,p.position,p.department,p.supervisor_name].join(" ").includes(filter));
- E("hr-count").textContent=T(staff.length)+" پرونده فعال · "+T(staff.filter(p=>p.confirmed).length)+" مورد تأیید مالک";
+ const shown=staff.filter(p=>(unit==="all"||p.unit===unit)&&(!onlyPending||!p.confirmed)&&[p.full_name,p.position,p.department,p.supervisor_name].join(" ").includes(filter));
+ E("hr-count").textContent=T(staff.length)+" پرونده فعال · "+T(staff.filter(p=>p.confirmed).length)+" مورد تأیید مالک · "+T(staff.filter(p=>!p.confirmed).length)+" منتظر بررسی";
  E("hr-people").innerHTML=shown.map(p=>{
   const owner=isOwner(p.unit);
   const canReport=owner||p.is_subordinate;
