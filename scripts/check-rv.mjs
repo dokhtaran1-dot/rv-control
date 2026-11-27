@@ -121,7 +121,7 @@ test("Owner HR roles, employee duties, incident review, no automatic fines",()=>
   assert.ok(html.includes("await window.HRControl?.authorize?.()"));
   assert.ok(html.includes("window.HRControl?.setup?.()"));
   assert.ok(html.includes('if(next==="hr")window.HRControl?.load?.()'));
-  for(const x of ["hr-info","hr-unit","hr-search","hr-refresh","hr-catalog","hr-people","hr-incidents","hr-count"])
+  for(const x of ["hr-info","hr-search","hr-refresh","hr-catalog","hr-people","hr-incidents","hr-count"])
     assert.ok(html.includes('id="'+x+'"'),"missing HR id "+x);
   for(const fn of ["rvctl_hr_board","rvctl_hr_profile_save","rvctl_hr_incident_report","rvctl_hr_incident_reply","rvctl_hr_incident_review"])
     assert.ok(hr.includes(fn),"missing RPC "+fn);
@@ -129,6 +129,9 @@ test("Owner HR roles, employee duties, incident review, no automatic fines",()=>
     assert.ok(!hr.includes(dangerous),"unexpected payroll write "+dangerous);
   assert.ok(!html.includes("قانون کار"));
   assert.ok(!hr.includes("قانون کار"));
+  assert.ok(!html.includes('id="hr-unit"'));
+  assert.ok(hr.includes('p.unit==="RV"'));
+  assert.ok(html.includes("۲۱ نفر رستوران"));
   assert.ok(workflow.includes("test -s dist/hr-control.js"));
   assert.ok(workflow.includes("'hr-control.js'"));
 });
